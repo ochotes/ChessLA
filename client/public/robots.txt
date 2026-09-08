@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /reset-password
+
+Sitemap: https://www.chessla.com/sitemap.xml

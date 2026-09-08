@@ -1,0 +1,32 @@
+{
+  "name": "chessla",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ChessLA - a professional real-time multiplayer chess platform",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "build:server": "npm run build --workspace server",
+    "build:client": "npm run build --workspace client",
+    "test:server": "npm run test --workspace server",
+    "typecheck": "npm run typecheck --workspace server && npm run typecheck --workspace client",
+    "db:migrate": "npm run db:migrate --workspace server",
+    "db:seed": "npm run db:seed --workspace server"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "UNLICENSED",
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true,
+    "prisma@5.22.0": true,
+    "sharp@0.33.5": true
+  }
+}

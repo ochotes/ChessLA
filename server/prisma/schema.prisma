@@ -1,0 +1,257 @@
+// ChessLA database schema.
+// Using SQLite for zero-config local development. Every field type used here
+// (String, Int, Boolean, DateTime) is supported unchanged by PostgreSQL, so
+// moving to Postgres for production is a one-line change of `provider` plus
+// a fresh `prisma migrate dev` — no schema rewrite required.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// NOTE: SQLite has no native enum type, so status/role fields below are
+// plain strings constrained at the application layer (zod schemas + the
+// TypeScript union types in src/). The allowed values are documented next to
+// each field. Moving to Postgres later can reintroduce real `enum` blocks if
+// desired — the string values below are chosen to match 1:1.
+
+model User {
+  id             String   @id @default(cuid())
+  username       String   @unique
+  usernameLower  String   @unique
+  fullName       String
+  email          String   @unique
+  emailLower     String   @unique
+  passwordHash   String
+  country        String
+  profilePicture String?
+  role           String   @default("PLAYER") // "PLAYER" | "MODERATOR" | "ADMIN"
+  status         String   @default("ACTIVE") // "ACTIVE" | "SUSPENDED" | "BANNED"
+  bio            String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  rating               Rating?
+  settings             UserSettings?
+  gamesAsWhite         Game[]        @relation("WhiteGames")
+  gamesAsBlack         Game[]        @relation("BlackGames")
+  sentInvitations      Invitation[]  @relation("SentInvitations")
+  receivedInvitations  Invitation[]  @relation("ReceivedInvitations")
+  friendshipsInitiated Friendship[]  @relation("FriendshipUser")
+  friendshipsReceived  Friendship[]  @relation("FriendshipFriend")
+  events               GameEvent[]
+  reportsFiled         Report[]      @relation("ReportsFiled")
+  reportsAgainst       Report[]      @relation("ReportsAgainst")
+  passwordResets       PasswordResetToken[]
+  refreshTokens        RefreshToken[]
+  chatMessages         ChatMessage[]
+  notifications        Notification[]
+
+  @@index([usernameLower])
+  @@index([emailLower])
+}
+
+model Rating {
+  userId          String   @id
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bulletRating    Int      @default(1200)
+  blitzRating     Int      @default(1200)
+  rapidRating     Int      @default(1200)
+  classicalRating Int      @default(1200)
+  highestRating   Int      @default(1200)
+  gamesPlayed     Int      @default(0)
+  wins            Int      @default(0)
+  losses          Int      @default(0)
+  draws           Int      @default(0)
+  currentStreak   Int      @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+model UserSettings {
+  userId           String  @id
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boardTheme       String  @default("classic")
+  pieceStyle       String  @default("standard")
+  boardOrientation String  @default("auto")
+  showLegalMoves   Boolean @default(true)
+  showCoordinates  Boolean @default(true)
+  moveAnimations   Boolean @default(true)
+  soundEffects     Boolean @default(true)
+  confirmResign    Boolean @default(true)
+  confirmDrawOffer Boolean @default(false)
+  theme            String  @default("dark")
+  profileIsPublic  Boolean @default(true)
+}
+
+model Game {
+  id                  String    @id @default(cuid())
+  whitePlayerId       String?
+  blackPlayerId       String?
+  whitePlayer         User?     @relation("WhiteGames", fields: [whitePlayerId], references: [id])
+  blackPlayer         User?     @relation("BlackGames", fields: [blackPlayerId], references: [id])
+  timeControlCategory String
+  timeControlLabel    String
+  initialTimeMs       Int
+  incrementMs         Int
+  startingFen         String    @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+  currentFen          String
+  pgn                 String    @default("")
+  status              String    @default("WAITING") // "WAITING" | "IN_PROGRESS" | "COMPLETED" | "ABORTED"
+  result              String?
+  terminationReason   String?
+  isRated             Boolean   @default(true)
+  whiteRatingBefore   Int?
+  blackRatingBefore   Int?
+  whiteRatingAfter    Int?
+  blackRatingAfter    Int?
+  createdAt           DateTime  @default(now())
+  startedAt           DateTime?
+  completedAt          DateTime?
+
+  moves        Move[]
+  events       GameEvent[]
+  chatMessages ChatMessage[]
+  reports      Report[]
+
+  @@index([whitePlayerId])
+  @@index([blackPlayerId])
+  @@index([status])
+}
+
+model Move {
+  id           String   @id @default(cuid())
+  gameId       String
+  game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  moveNumber   Int
+  player       String
+  san          String
+  uci          String
+  fenAfter     String
+  clockWhiteMs Int
+  clockBlackMs Int
+  createdAt    DateTime @default(now())
+
+  @@index([gameId])
+}
+
+model Invitation {
+  id                  String   @id @default(cuid())
+  senderId            String
+  sender              User     @relation("SentInvitations", fields: [senderId], references: [id])
+  recipientId         String?
+  recipient           User?    @relation("ReceivedInvitations", fields: [recipientId], references: [id])
+  code                String   @unique
+  timeControlCategory String
+  timeControlLabel    String
+  initialTimeMs       Int
+  incrementMs          Int
+  status              String   @default("PENDING") // "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "CANCELLED"
+  gameId              String?
+  createdAt           DateTime @default(now())
+  expiresAt           DateTime
+
+  @@index([code])
+  @@index([recipientId])
+}
+
+model Friendship {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation("FriendshipUser", fields: [userId], references: [id])
+  friendId  String
+  friend    User             @relation("FriendshipFriend", fields: [friendId], references: [id])
+  status    String   @default("PENDING") // "PENDING" | "ACCEPTED" | "DECLINED" | "BLOCKED"
+  createdAt DateTime         @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model GameEvent {
+  id        String   @id @default(cuid())
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  type      String
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@index([gameId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  text      String
+  isSystem  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([gameId])
+}
+
+model Report {
+  id         String    @id @default(cuid())
+  reporterId String
+  reporter   User      @relation("ReportsFiled", fields: [reporterId], references: [id])
+  reportedId String
+  reported   User      @relation("ReportsAgainst", fields: [reportedId], references: [id])
+  gameId     String?
+  game       Game?     @relation(fields: [gameId], references: [id])
+  reason     String
+  details    String?
+  status     String    @default("OPEN")
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  data      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String
+  before     String?
+  after      String?
+  createdAt  DateTime @default(now())
+}

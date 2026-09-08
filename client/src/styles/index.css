@@ -1,0 +1,89 @@
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    @apply bg-bg text-text antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+  /* Visible, unambiguous focus ring for keyboard users — never relying on
+     color alone (section 30: accessibility). */
+  :focus-visible {
+    outline: 2px solid rgb(var(--color-accent));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: rgb(var(--color-accent) / 0.25);
+  }
+}
+
+@layer components {
+  /* Buttons are rectangular with a modest radius — never a full pill —
+     per the brand rule against pill-shaped CTAs. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold
+      transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-accent-contrast hover:brightness-110 active:brightness-95;
+  }
+  .btn-secondary {
+    @apply btn bg-surface-raised text-text border border-border hover:bg-border/60;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-accent-contrast hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-text hover:bg-surface-raised;
+  }
+  .card {
+    @apply rounded-xl border border-border bg-surface shadow-card;
+  }
+  .input {
+    @apply w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-text placeholder:text-text-muted
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-text;
+  }
+  .field-error {
+    @apply mt-1 text-sm text-danger;
+  }
+}
+
+@layer utilities {
+  .skeleton {
+    @apply relative overflow-hidden bg-surface-raised rounded-md;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(var(--color-border) / 0.6), transparent);
+    animation: skeleton-sweep 1.6s ease-in-out infinite;
+  }
+  @keyframes skeleton-sweep {
+    100% { transform: translateX(100%); }
+  }
+}
+
+/* Respect reduced-motion preferences everywhere, including the skeleton sweep. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

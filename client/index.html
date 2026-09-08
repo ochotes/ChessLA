@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>ChessLA — Real-Time Multiplayer Chess</title>
+    <meta
+      name="description"
+      content="Play real-time multiplayer chess on ChessLA. Find an opponent by rating, challenge friends, and track your rating across bullet, blitz, rapid, and classical chess."
+    />
+    <link rel="canonical" href="https://www.chessla.com/" />
+
+    <!-- Open Graph / social preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ChessLA" />
+    <meta property="og:title" content="ChessLA — Real-Time Multiplayer Chess" />
+    <meta
+      property="og:description"
+      content="Play real-time multiplayer chess on ChessLA. Find an opponent by rating, challenge friends, and track your rating across bullet, blitz, rapid, and classical chess."
+    />
+    <meta property="og:image" content="/social-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://www.chessla.com/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ChessLA — Real-Time Multiplayer Chess" />
+    <meta
+      name="twitter:description"
+      content="Play real-time multiplayer chess on ChessLA. Find an opponent by rating, challenge friends, and track your rating."
+    />
+    <meta name="twitter:image" content="/social-preview.png" />
+
+    <meta name="theme-color" content="#101212" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Applied before first paint so switching themes (or loading a saved
+      // preference) never causes a flash of the wrong theme.
+      (function () {
+        try {
+          var saved = localStorage.getItem("chessla_theme");
+          if (saved === "dark" || saved === "light") {
+            document.documentElement.setAttribute("data-theme", saved);
+          }
+        } catch (e) {
+          /* localStorage unavailable (private mode, blocked storage) — fall back to system preference via CSS. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
