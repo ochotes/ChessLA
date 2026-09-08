@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChessLA Build Preview</title>
+<meta name="description" content="A screenshot tour and verification report for the ChessLA real-time multiplayer chess platform build.">
+<meta name="robots" content="noindex, follow">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="ChessLA Build Preview">
+<meta property="og:description" content="A screenshot tour and verification report for the ChessLA real-time multiplayer chess platform build.">
+<meta property="og:image" content="https://ochotes.github.io/ChessLA/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="favicon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap">
+
+<style>
+  :root {
+    --bg: 250 250 249;
+    --surface: 255 255 255;
+    --surface-2: 244 244 242;
+    --border: 227 227 223;
+    --text: 23 23 21;
+    --text-muted: 100 100 95;
+    --accent: 17 94 82;
+    --accent-contrast: 255 255 255;
+    --gold: 156 112 26;
+    --success: 27 116 74;
+    --danger: 173 42 42;
+    --warning: 138 90 12;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.05), 0 1px 3px rgb(0 0 0 / 0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: 16 18 18;
+      --surface: 25 28 28;
+      --surface-2: 33 37 37;
+      --border: 52 57 57;
+      --text: 236 238 235;
+      --text-muted: 162 168 163;
+      --accent: 61 176 155;
+      --accent-contrast: 6 12 11;
+      --gold: 214 171 82;
+      --success: 88 189 137;
+      --danger: 227 111 111;
+      --warning: 219 165 74;
+      --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: 16 18 18;
+    --surface: 25 28 28;
+    --surface-2: 33 37 37;
+    --border: 52 57 57;
+    --text: 236 238 235;
+    --text-muted: 162 168 163;
+    --accent: 61 176 155;
+    --accent-contrast: 6 12 11;
+    --gold: 214 171 82;
+    --success: 88 189 137;
+    --danger: 227 111 111;
+    --warning: 219 165 74;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: rgb(var(--bg));
+    color: rgb(var(--text));
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  img { max-width: 100%; }
+  h1, h2, h3 {
+    font-family: "Fraunces", Georgia, serif;
+    text-wrap: balance;
+    margin: 0;
+    font-weight: 600;
+  }
+  a { color: rgb(var(--accent)); }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- header ---- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    background: rgb(var(--surface) / 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgb(var(--border));
+  }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: rgb(var(--text)); }
+  .brand svg { display: block; }
+  .brand-name { font-family: "Fraunces", serif; font-weight: 600; font-size: 18px; }
+  .eyebrow-pill {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: rgb(var(--text-muted)); border: 1px solid rgb(var(--border)); border-radius: 999px;
+    padding: 3px 10px; margin-left: 4px;
+  }
+  .top-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgb(var(--border));
+    background: rgb(var(--surface)); color: rgb(var(--text-muted)); cursor: pointer;
+  }
+  .icon-btn:hover { color: rgb(var(--text)); background: rgb(var(--surface-2)); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600;
+    text-decoration: none; border: 1px solid transparent; cursor: pointer;
+  }
+  .btn-primary { background: rgb(var(--accent)); color: rgb(var(--accent-contrast)); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-secondary { background: rgb(var(--surface)); color: rgb(var(--text)); border-color: rgb(var(--border)); }
+  .btn-secondary:hover { background: rgb(var(--surface-2)); }
+
+  /* ---- hero ---- */
+  .hero { padding: 56px 0 40px; }
+  .hero-eyebrow { color: rgb(var(--gold)); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .hero h1 { font-size: clamp(32px, 4.5vw, 48px); line-height: 1.08; margin-top: 10px; max-width: 16ch; }
+  .hero p.lead { max-width: 62ch; color: rgb(var(--text-muted)); font-size: 17px; margin-top: 16px; }
+  .hero-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 36px; }
+  .stat-tile { background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow-card); }
+  .stat-tile .num { font-family: "Fraunces", serif; font-size: 28px; font-weight: 600; color: rgb(var(--accent)); }
+  .stat-tile .label { font-size: 12.5px; color: rgb(var(--text-muted)); margin-top: 2px; }
+
+  /* ---- sections ---- */
+  section { padding: 44px 0; border-top: 1px solid rgb(var(--border)); }
+  section > .wrap > .section-head { max-width: 62ch; margin-bottom: 28px; }
+  .section-eyebrow { font-size: 12.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgb(var(--text-muted)); }
+  section h2 { font-size: clamp(22px, 3vw, 28px); margin-top: 8px; }
+  section p.dek { color: rgb(var(--text-muted)); margin-top: 10px; font-size: 15.5px; }
+
+  /* ---- bug callouts ---- */
+  .bug-list { display: grid; gap: 12px; margin-top: 8px; }
+  .bug-card {
+    display: grid; grid-template-columns: auto 1fr; gap: 14px;
+    background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); border-left: 3px solid rgb(var(--warning));
+    border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow-card);
+  }
+  .bug-card .badge {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: rgb(var(--warning)); background: rgb(var(--warning) / 0.12); border-radius: 6px;
+    padding: 3px 8px; height: fit-content; white-space: nowrap;
+  }
+  .bug-card .found { color: rgb(var(--text)); font-weight: 600; font-size: 14.5px; }
+  .bug-card .fixed { color: rgb(var(--text-muted)); font-size: 14px; margin-top: 4px; }
+  .bug-card .fixed strong { color: rgb(var(--success)); font-weight: 600; }
+
+  /* ---- gallery ---- */
+  .gallery-group { margin-bottom: 40px; }
+  .gallery-group:last-child { margin-bottom: 0; }
+  .gallery-group h3 { font-size: 17px; margin-bottom: 4px; }
+  .gallery-group .note { color: rgb(var(--text-muted)); font-size: 14px; margin-bottom: 14px; }
+  .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .gallery-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .shot { background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-card); }
+  .shot img { display: block; width: 100%; height: auto; border-bottom: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); }
+  .shot figcaption { padding: 10px 14px; font-size: 13.5px; color: rgb(var(--text-muted)); margin: 0; }
+  .shot figcaption strong { color: rgb(var(--text)); font-weight: 600; }
+  figure { margin: 0; }
+
+  /* ---- checklist ---- */
+  .check-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px 32px; }
+  .check-group h3 { font-size: 14.5px; color: rgb(var(--text)); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgb(var(--border)); }
+  .check-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .check-group li { display: flex; align-items: flex-start; gap: 9px; font-size: 14px; color: rgb(var(--text-muted)); }
+  .check-group li .mark { flex-shrink: 0; width: 18px; height: 18px; border-radius: 5px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .mark.done { background: rgb(var(--success) / 0.15); color: rgb(var(--success)); }
+  .mark.partial { background: rgb(var(--warning) / 0.15); color: rgb(var(--warning)); font-size: 10px; font-weight: 800; }
+  .check-group li span.t { color: rgb(var(--text)); }
+  .check-group li.partial-note span.t { color: rgb(var(--text-muted)); font-style: italic; }
+
+  /* ---- stack strip ---- */
+  .stack-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+  .stack-chip {
+    font-size: 13px; font-weight: 600; color: rgb(var(--text)); background: rgb(var(--surface));
+    border: 1px solid rgb(var(--border)); border-radius: 8px; padding: 7px 12px;
+  }
+
+  /* ---- run it ---- */
+  .run-card { background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-card); }
+  .run-card pre {
+    background: rgb(var(--surface-2)); border: 1px solid rgb(var(--border)); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.65; margin: 14px 0 0;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  .run-card code { color: rgb(var(--text)); }
+  .demo-login { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; font-size: 13.5px; color: rgb(var(--text-muted)); }
+  .demo-login b { color: rgb(var(--text)); font-family: monospace; font-weight: 600; }
+
+  footer { border-top: 1px solid rgb(var(--border)); padding: 28px 0 40px; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  footer p { color: rgb(var(--text-muted)); font-size: 13.5px; margin: 0; }
+
+  @media (max-width: 760px) {
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+    .gallery-grid.cols-2 { grid-template-columns: 1fr; }
+    .check-grid { grid-template-columns: 1fr; }
+    .hero-actions { flex-direction: column; align-items: stretch; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true">
+        <rect x="3" y="3" width="94" height="94" rx="24" fill="#0E1414"/>
+        <path d="M36 76 L36 40 L66 40" fill="none" stroke="#3DB09B" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="66" cy="40" r="7.5" fill="#D6AB52"/>
+      </svg>
+      <span class="brand-name">ChessLA</span>
+      <span class="eyebrow-pill">Build Preview</span>
+    </a>
+    <div class="top-actions">
+      <button class="icon-btn" id="theme-toggle" aria-label="Toggle color theme" type="button">
+        <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
+      </button>
+      <a class="btn btn-secondary" href="https://github.com/ochotes/ChessLA" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.04-.72.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.8 1.18 1.83 1.18 3.09 0 4.43-2.7 5.4-5.27 5.69.42.36.78 1.07.78 2.15 0 1.56-.01 2.81-.01 3.19 0 .3.21.66.8.55A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        View source
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <p class="hero-eyebrow">Think. Play. Conquer.</p>
+    <h1>ChessLA is built, tested, and running.</h1>
+    <p class="lead">
+      A server-authoritative multiplayer chess platform: real-time play, matchmaking, ratings,
+      friends, and an admin panel. This page is a record of what shipped and how it was verified —
+      not the live product site, since a public launch is still waiting on domain and hosting decisions.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/ochotes/ChessLA" target="_blank" rel="noopener">Open the repository</a>
+      <a class="btn btn-secondary" href="#gallery">See it running</a>
+      <a class="btn btn-secondary" href="#run-it">Run it locally</a>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-tile"><div class="num tabular">18/18</div><div class="label">Chess rules &amp; rating tests passing</div></div>
+      <div class="stat-tile"><div class="num tabular">2</div><div class="label">Real bugs found &amp; fixed via live browser testing</div></div>
+      <div class="stat-tile"><div class="num tabular">0</div><div class="label">Console errors in final verification</div></div>
+      <div class="stat-tile"><div class="num tabular">~109&nbsp;KB</div><div class="label">Gzipped JS for the entire client</div></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <p class="section-eyebrow">Verified, not assumed</p>
+        <h2>Two browsers, real Socket.IO connections, a real game</h2>
+        <p class="dek">
+          Beyond the automated test suite, I registered two accounts, matched them through Quick
+          Match, and played moves across two independent browser sessions — watching the board,
+          clocks, and move list stay in sync in real time. That process caught two real defects,
+          which are now fixed and reverified.
+        </p>
+      </div>
+      <div class="bug-list">
+        <div class="bug-card">
+          <span class="badge">Found live</span>
+          <div>
+            <div class="found">A false "opponent reconnected" toast fired on every game join, not just genuine reconnections.</div>
+            <div class="fixed">Fixed: the server now only broadcasts a reconnect event when a player was <strong>actually</strong> marked disconnected first.</div>
+          </div>
+        </div>
+        <div class="bug-card">
+          <span class="badge">Found live</span>
+          <div>
+            <div class="found">The cookie consent banner sat directly on top of the mobile bottom navigation bar, hiding it.</div>
+            <div class="fixed">Fixed: the banner's offset now matches the navigation bar's own breakpoint, so it never overlaps.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="section-eyebrow">Screenshots</p>
+        <h2>What's actually on screen</h2>
+        <p class="dek">Every image below is a real screenshot from a running instance — nothing here is a mockup.</p>
+      </div>
+
+      <div class="gallery-group">
+        <h3>The landing page, light and dark</h3>
+        <p class="note">One clear call to action, live player/game counts pulled from the database, no gradients, no stock art.</p>
+        <div class="gallery-grid cols-2">
+          <figure class="shot"><img src="screenshots/landing-light.png" width="1280" height="1024" alt="ChessLA landing page in light theme, showing the hero, a live chess position preview, and feature cards"><figcaption><strong>Light theme</strong></figcaption></figure>
+          <figure class="shot"><img src="screenshots/landing-dark.png" width="1280" height="1024" loading="lazy" alt="ChessLA landing page in dark theme"><figcaption><strong>Dark theme</strong></figcaption></figure>
+        </div>
+      </div>
+
+      <div class="gallery-group">
+        <h3>From zero to playing in two steps</h3>
+        <p class="note">Client-side validation for instant feedback; the server never trusts it.</p>
+        <div class="gallery-grid cols-2">
+          <figure class="shot"><img src="screenshots/register.png" loading="lazy" alt="ChessLA account registration form, filled in"><figcaption><strong>Create an account</strong></figcaption></figure>
+          <figure class="shot"><img src="screenshots/dashboard.png" loading="lazy" alt="ChessLA dashboard after registering, showing rating, quick actions, and stats"><figcaption><strong>Dashboard, moments after signing up</strong></figcaption></figure>
+        </div>
+      </div>
+
+      <div class="gallery-group">
+        <h3>Two browsers, one game</h3>
+        <p class="note">Both screenshots were taken the same instant, one from each player's own session, right after White played 1.e4.</p>
+        <div class="gallery-grid cols-2">
+          <figure class="shot"><img src="screenshots/game-white.png" loading="lazy" alt="Live chess game from White's browser, just after playing e4, showing the board, clocks, and move list"><figcaption><strong>White's screen</strong> — clock switches to Black, move recorded as "1. e4"</figcaption></figure>
+          <figure class="shot"><img src="screenshots/game-black.png" loading="lazy" alt="The same live chess game from Black's browser at the same instant, correctly mirrored with Black at the bottom"><figcaption><strong>Black's screen, same instant</strong> — board auto-oriented, perfectly in sync</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="gallery-group">
+        <h3>Built mobile-first</h3>
+        <p class="note">Bottom tab navigation, full-width touch targets, no desktop layout squeezed into a phone.</p>
+        <div class="gallery-grid cols-2">
+          <figure class="shot"><img src="screenshots/mobile-landing.png" loading="lazy" alt="ChessLA landing page on a 390px-wide mobile viewport"><figcaption><strong>Landing, 390px viewport</strong></figcaption></figure>
+          <figure class="shot"><img src="screenshots/mobile-dashboard.png" loading="lazy" alt="ChessLA dashboard on mobile, with the bottom navigation bar visible below the cookie banner"><figcaption><strong>Dashboard, with the bottom nav fix visible</strong></figcaption></figure>
+        </div>
+      </div>
+
+      <div class="gallery-group">
+        <h3>Social &amp; competition</h3>
+        <p class="note">The leaderboard's country filter, shown here narrowed to Kenya, is pulling real seeded player data.</p>
+        <div class="gallery-grid cols-2">
+          <figure class="shot"><img src="screenshots/notifications.png" loading="lazy" alt="The notification bell dropdown, open and showing an empty state"><figcaption><strong>Notification center</strong></figcaption></figure>
+          <figure class="shot"><img src="screenshots/leaderboard.png" loading="lazy" alt="The leaderboard filtered by country to Kenya, showing two real players ranked by blitz rating"><figcaption><strong>Leaderboard, filtered to Kenya</strong></figcaption></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <p class="section-eyebrow">Scope</p>
+        <h2>What's built, and what's honestly not</h2>
+        <p class="dek">Two items are intentionally partial rather than faked — see the notes below.</p>
+      </div>
+      <div class="check-grid">
+        <div class="check-group">
+          <h3>Chess engine &amp; rules</h3>
+          <ul>
+            <li><span class="mark done">✓</span><span class="t">Full legal-move validation, enforced only on the server</span></li>
+            <li><span class="mark done">✓</span><span class="t">Castling both sides, en passant, all four promotions</span></li>
+            <li><span class="mark done">✓</span><span class="t">Check, checkmate, and stalemate detection</span></li>
+            <li><span class="mark done">✓</span><span class="t">Threefold repetition, fifty-move rule, insufficient material</span></li>
+          </ul>
+        </div>
+        <div class="check-group">
+          <h3>Real-time multiplayer</h3>
+          <ul>
+            <li><span class="mark done">✓</span><span class="t">Socket.IO live play with instant sync</span></li>
+            <li><span class="mark done">✓</span><span class="t">Server-side clocks across 10 built-in time controls</span></li>
+            <li><span class="mark done">✓</span><span class="t">Disconnect/reconnect handling with a grace period</span></li>
+            <li><span class="mark done">✓</span><span class="t">Draw offers with cooldown, resignation, timeouts</span></li>
+          </ul>
+        </div>
+        <div class="check-group">
+          <h3>Accounts &amp; security</h3>
+          <ul>
+            <li><span class="mark done">✓</span><span class="t">Register, login, forgot/reset password</span></li>
+            <li><span class="mark done">✓</span><span class="t">bcrypt hashing, httpOnly JWT sessions</span></li>
+            <li><span class="mark done">✓</span><span class="t">CSRF protection, rate limiting, security headers</span></li>
+            <li><span class="mark done">✓</span><span class="t">Every mutating endpoint validated server-side</span></li>
+          </ul>
+        </div>
+        <div class="check-group">
+          <h3>Matchmaking &amp; ratings</h3>
+          <ul>
+            <li><span class="mark done">✓</span><span class="t">Rating-based Quick Match, widens the longer you wait</span></li>
+            <li><span class="mark done">✓</span><span class="t">Friend challenges &amp; shareable invite links</span></li>
+            <li><span class="mark done">✓</span><span class="t">Separate Elo rating per time control</span></li>
+            <li><span class="mark done">✓</span><span class="t">Global, country, and friends leaderboards</span></li>
+          </ul>
+        </div>
+        <div class="check-group">
+          <h3>Social &amp; history</h3>
+          <ul>
+            <li><span class="mark done">✓</span><span class="t">Friends: search, request, accept, presence</span></li>
+            <li><span class="mark done">✓</span><span class="t">In-game chat with quick messages and mute</span></li>
+            <li><span class="mark done">✓</span><span class="t">Full game history and move-by-move replay</span></li>
+            <li class="partial-note"><span class="mark partial">i</span><span class="t">Replay shows a real material-balance bar, not fabricated engine analysis</span></li>
+          </ul>
+        </div>
+        <div class="check-group">
+          <h3>Admin, anti-cheat &amp; polish</h3>
+          <ul>
+            <li><span class="mark done">✓</span><span class="t">Admin panel: users, reports, audit log, no silent result edits</span></li>
+            <li class="partial-note"><span class="mark partial">i</span><span class="t">Move-timing heuristics flag suspicious play — a first line of defense, not full statistical anti-cheat</span></li>
+            <li><span class="mark done">✓</span><span class="t">Privacy policy, terms, cookie consent, SEO meta, custom 404</span></li>
+            <li><span class="mark done">✓</span><span class="t">Hand-drawn SVG favicon &amp; social image — no AI or stock art</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <p class="section-eyebrow">Under the hood</p>
+        <h2>Stack</h2>
+      </div>
+      <div class="stack-strip">
+        <span class="stack-chip">React</span>
+        <span class="stack-chip">TypeScript</span>
+        <span class="stack-chip">Vite</span>
+        <span class="stack-chip">Tailwind CSS</span>
+        <span class="stack-chip">Node.js</span>
+        <span class="stack-chip">Express</span>
+        <span class="stack-chip">Socket.IO</span>
+        <span class="stack-chip">Prisma</span>
+        <span class="stack-chip">SQLite → Postgres-ready</span>
+        <span class="stack-chip">chess.js</span>
+        <span class="stack-chip">Vitest</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="run-it">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="section-eyebrow">Try it yourself</p>
+        <h2>Runs on your machine in under a minute</h2>
+      </div>
+      <div class="run-card">
+        <pre><code>npm install
+cp server/.env.example server/.env
+npm run db:migrate &amp;&amp; npm run db:seed
+npm run dev:server    <span style="opacity:.6"># http://localhost:4000</span>
+npm run dev:client    <span style="opacity:.6"># http://localhost:5173</span></code></pre>
+        <div class="demo-login">
+          <span>Demo login: <b>AlexN</b> / <b>Password123</b></span>
+          <span>Full instructions: <a href="https://github.com/ochotes/ChessLA/blob/main/README.md" target="_blank" rel="noopener">README.md</a></span>
+          <span>Going live checklist: <a href="https://github.com/ochotes/ChessLA/blob/main/DEPLOYMENT.md" target="_blank" rel="noopener">DEPLOYMENT.md</a></span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>ChessLA — a repository at github.com/ochotes/ChessLA.</p>
+    <p>This preview is a static summary. No live game server is connected here.</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('theme-toggle');
+    var icon = document.getElementById('theme-icon');
+    var MOON = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>';
+    var SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+
+    function isDark() {
+      var explicit = root.getAttribute('data-theme');
+      if (explicit === 'dark') return true;
+      if (explicit === 'light') return false;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function paint() {
+      icon.innerHTML = isDark() ? SUN : MOON;
+    }
+    btn.addEventListener('click', function () {
+      var next = isDark() ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('chessla-preview-theme', next); } catch (e) {}
+      paint();
+    });
+    try {
+      var saved = localStorage.getItem('chessla-preview-theme');
+      if (saved === 'light' || saved === 'dark') root.setAttribute('data-theme', saved);
+    } catch (e) {}
+    paint();
+  })();
+</script>
+</body>
+</html>
