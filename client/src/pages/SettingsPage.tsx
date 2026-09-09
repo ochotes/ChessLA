@@ -7,6 +7,7 @@ import { usePageMeta } from "../hooks/usePageMeta";
 import { COUNTRIES } from "../lib/countries";
 import { Board } from "../components/chessboard/Board";
 import { BOARD_THEMES } from "../components/chessboard/boardThemes";
+import { PIECE_STYLES } from "../components/chessboard/pieceStyles";
 import type { UserSettings } from "../lib/types";
 
 const PREVIEW_FEN = "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 w kq - 4 5";
@@ -65,7 +66,17 @@ export function SettingsPage() {
         <h2 className="font-semibold">Board</h2>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="max-w-[220px]">
-            <Board fen={PREVIEW_FEN} orientation="white" interactive={false} myColor={null} lastMove={null} onMove={() => {}} boardTheme={settings.boardTheme} showCoordinates={false} />
+            <Board
+              fen={PREVIEW_FEN}
+              orientation="white"
+              interactive={false}
+              myColor={null}
+              lastMove={null}
+              onMove={() => {}}
+              boardTheme={settings.boardTheme}
+              pieceStyle={settings.pieceStyle}
+              showCoordinates={false}
+            />
           </div>
           <div className="space-y-3">
             <div>
@@ -81,6 +92,29 @@ export function SettingsPage() {
                   </button>
                 ))}
               </div>
+              <p className="mt-1 text-xs text-text-muted">Only changes your own view — your opponent keeps their own board theme.</p>
+            </div>
+            <div>
+              <span className="label">Piece style</span>
+              <div className="flex flex-wrap gap-2">
+                {PIECE_STYLES.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => updateSettings({ pieceStyle: p.id })}
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${settings.pieceStyle === p.id ? "border-accent text-accent" : "border-border text-text-muted hover:bg-surface-raised"}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#1b1e1f] text-base leading-none"
+                      style={{ color: p.white.fill, textShadow: p.white.shadow, fontWeight: p.fontWeight }}
+                    >
+                      {p.sample[0]}
+                    </span>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-text-muted">Only changes your own view — your opponent keeps their own piece style.</p>
             </div>
             <div>
               <span className="label">Board orientation</span>

@@ -86,7 +86,7 @@ export function GamePage() {
   }
 
   if (mode === "replay" && replayGame) {
-    return <ReplayView game={replayGame} myUsername={user?.username ?? null} />;
+    return <ReplayView game={replayGame} myUsername={user?.username ?? null} settings={settings} />;
   }
 
   if (mode === "live" && id && user) {
@@ -249,6 +249,7 @@ function LiveView({ gameId, myUserId, settings }: { gameId: string; myUserId: st
             showLegalMoves={settings?.showLegalMoves ?? true}
             showCoordinates={settings?.showCoordinates ?? true}
             boardTheme={settings?.boardTheme}
+            pieceStyle={settings?.pieceStyle}
           />
         </div>
         <Clock
@@ -363,7 +364,7 @@ function gameStatusLabel(state: GameStateDTO, myColor: "w" | "b" | null): string
 // Replay / analysis
 // ---------------------------------------------------------------------------
 
-function ReplayView({ game, myUsername }: { game: GameReplay; myUsername: string | null }) {
+function ReplayView({ game, myUsername, settings }: { game: GameReplay; myUsername: string | null; settings: UserSettings | null }) {
   const [moveIndex, setMoveIndex] = useState(game.moves.length - 1);
 
   const displayedFen = moveIndex === -1 ? game.startingFen : game.moves[moveIndex]?.fenAfter ?? game.currentFen;
@@ -425,7 +426,17 @@ function ReplayView({ game, myUsername }: { game: GameReplay; myUsername: string
           </div>
         </div>
 
-        <Board fen={displayedFen} orientation={orientation} interactive={false} myColor={null} lastMove={null} onMove={() => {}} />
+        <Board
+          fen={displayedFen}
+          orientation={orientation}
+          interactive={false}
+          myColor={null}
+          lastMove={null}
+          onMove={() => {}}
+          showCoordinates={settings?.showCoordinates ?? true}
+          boardTheme={settings?.boardTheme}
+          pieceStyle={settings?.pieceStyle}
+        />
 
         <div className="mt-3 flex items-center justify-center gap-2">
           <button className="btn-ghost" onClick={() => setMoveIndex(-1)} aria-label="First move">

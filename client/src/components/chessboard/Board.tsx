@@ -3,6 +3,7 @@ import { Chess, type Square } from "chess.js";
 import { pieceGlyph, PIECE_NAMES } from "./pieceGlyphs";
 import { PromotionPicker } from "./PromotionPicker";
 import { getBoardTheme } from "./boardThemes";
+import { getPieceStyle } from "./pieceStyles";
 
 export interface BoardProps {
   fen: string;
@@ -15,6 +16,15 @@ export interface BoardProps {
   showCoordinates?: boolean;
   /** One of BOARD_THEMES' ids. Defaults to "classic" when omitted. */
   boardTheme?: string;
+  /**
+   * One of PIECE_STYLES' ids. Defaults to "standard" when omitted.
+   *
+   * This is read from the *viewer's own* settings only — never from the
+   * opponent's, and never carried over the network. Each player's board
+   * always renders with their own local boardTheme/pieceStyle, so switching
+   * either one never changes what the other player sees on their screen.
+   */
+  pieceStyle?: string;
 }
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -38,8 +48,10 @@ export function Board({
   showLegalMoves = true,
   showCoordinates = true,
   boardTheme,
+  pieceStyle,
 }: BoardProps) {
   const theme = getBoardTheme(boardTheme);
+  const pieces = getPieceStyle(pieceStyle);
   const [selected, setSelected] = useState<string | null>(null);
   const [pendingPromotion, setPendingPromotion] = useState<{ from: string; to: string } | null>(null);
 
@@ -210,11 +222,9 @@ export function Board({
                     className="pointer-events-none relative z-[1] leading-none"
                     style={{
                       fontSize: "min(7.2vw, 52px)",
-                      color: piece.color === "w" ? "#f5f5f0" : "#15181a",
-                      filter:
-                        piece.color === "w"
-                          ? "drop-shadow(0 1px 1px rgba(0,0,0,0.55))"
-                          : "drop-shadow(0 1px 1px rgba(0,0,0,0.35))",
+                      fontWeight: pieces.fontWeight,
+                      color: piece.color === "w" ? pieces.white.fill : pieces.black.fill,
+                      textShadow: piece.color === "w" ? pieces.white.shadow : pieces.black.shadow,
                     }}
                   >
                     {pieceGlyph(piece.type, piece.color)}
