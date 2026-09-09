@@ -2,6 +2,16 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, attachUserIfPresent } from "../middleware/auth.js";
 import { gameManager } from "../game/GameManager.js";
+import { getEngineTier } from "../engine/engineTiers.js";
+
+/** A finished game's white/black player relation is null exactly when that
+ * seat was one of the named engine bots — whiteEngineTier/blackEngineTier
+ * records which one. This turns either shape into the same display info. */
+function opponentInfo(player: { username: string; country: string } | null, engineTierId: string | null, ratingBefore: number | null | undefined, fallbackRating: number | undefined) {
+  if (player) return { username: player.username, country: player.country, rating: ratingBefore ?? fallbackRating ?? null, isEngine: false };
+  const tier = engineTierId ? getEngineTier(engineTierId) : undefined;
+  return { username: tier?.name ?? "Unknown engine", country: "", rating: tier?.targetElo ?? null, isEngine: true };
+}
 
 export const gamesRouter = Router();
 
@@ -22,12 +32,13 @@ gamesRouter.get("/history", requireAuth, async (req, res) => {
     games: games.map((g) => {
       const isWhite = g.whitePlayerId === userId;
       const opponent = isWhite ? g.blackPlayer : g.whitePlayer;
+      const opponentEngineTier = isWhite ? g.blackEngineTier : g.whiteEngineTier;
       const myRatingBefore = isWhite ? g.whiteRatingBefore : g.blackRatingBefore;
       const myRatingAfter = isWhite ? g.whiteRatingAfter : g.blackRatingAfter;
       const outcome = g.result === "1/2-1/2" ? "draw" : g.result === (isWhite ? "1-0" : "0-1") ? "win" : "loss";
       return {
         id: g.id,
-        opponent: opponent ? { username: opponent.username, country: opponent.country } : { username: "Unknown", country: "" },
+        opponent: opponentInfo(opponent, opponentEngineTier, null, undefined),
         playedAs: isWhite ? "white" : "black",
         timeControl: g.timeControlLabel,
         timeControlCategory: g.timeControlCategory,
@@ -61,12 +72,8 @@ gamesRouter.get("/:id", attachUserIfPresent, async (req, res) => {
       currentFen: game.currentFen,
       pgn: game.pgn,
       isRated: game.isRated,
-      white: game.whitePlayer
-        ? { username: game.whitePlayer.username, country: game.whitePlayer.country, rating: game.whiteRatingBefore ?? game.whitePlayer.rating?.blitzRating }
-        : null,
-      black: game.blackPlayer
-        ? { username: game.blackPlayer.username, country: game.blackPlayer.country, rating: game.blackRatingBefore ?? game.blackPlayer.rating?.blitzRating }
-        : null,
+      white: opponentInfo(game.whitePlayer, game.whiteEngineTier, game.whiteRatingBefore, game.whitePlayer?.rating?.blitzRating),
+      black: opponentInfo(game.blackPlayer, game.blackEngineTier, game.blackRatingBefore, game.blackPlayer?.rating?.blitzRating),
       moves: game.moves.map((m) => ({ moveNumber: m.moveNumber, player: m.player, san: m.san, fenAfter: m.fenAfter, clockWhiteMs: m.clockWhiteMs, clockBlackMs: m.clockBlackMs })),
       createdAt: game.createdAt,
       completedAt: game.completedAt,

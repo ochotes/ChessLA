@@ -28,9 +28,20 @@ export interface PlayerSummary {
   country: string;
   profilePicture: string | null;
   rating: number;
+  /** True only for one of the named Claude-tier bots (see EngineTier). */
+  isEngine?: boolean;
 }
 
 export type Side = "white" | "black";
+
+export interface EngineTier {
+  id: string;
+  name: string;
+  eloMin: number;
+  eloMax: number;
+  targetElo: number;
+  blurb: string;
+}
 
 export interface GameStateDTO {
   id: string;
@@ -63,7 +74,7 @@ export interface LeaderboardEntry {
 
 export interface GameHistoryEntry {
   id: string;
-  opponent: { username: string; country: string };
+  opponent: { username: string; country: string; isEngine?: boolean };
   playedAs: Side;
   timeControl: string;
   timeControlCategory: TimeControlCategory;
@@ -85,8 +96,8 @@ export interface GameReplay {
   currentFen: string;
   pgn: string;
   isRated: boolean;
-  white: { username: string; country: string; rating?: number } | null;
-  black: { username: string; country: string; rating?: number } | null;
+  white: { username: string; country: string; rating?: number | null; isEngine?: boolean } | null;
+  black: { username: string; country: string; rating?: number | null; isEngine?: boolean } | null;
   moves: { moveNumber: number; player: Side; san: string; fenAfter: string; clockWhiteMs: number; clockBlackMs: number }[];
   createdAt: string;
   completedAt: string | null;

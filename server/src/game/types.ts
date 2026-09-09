@@ -8,6 +8,9 @@ export interface PlayerSummary {
   country: string;
   profilePicture: string | null;
   rating: number;
+  /** True only for one of the named Claude-tier bots — never set for a real
+   * user, and never influenced by anything the human opponent configured. */
+  isEngine?: boolean;
 }
 
 export interface GameStateDTO {

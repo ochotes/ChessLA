@@ -14,6 +14,7 @@ import { invitationsRouter } from "./routes/invitations.js";
 import { notificationsRouter } from "./routes/notifications.js";
 import { reportsRouter } from "./routes/reports.js";
 import { timeControlsRouter } from "./routes/timeControls.js";
+import { enginesRouter } from "./routes/engines.js";
 import { statsRouter } from "./routes/stats.js";
 import { adminRouter } from "./admin/routes.js";
 import { registerSockets } from "./sockets/index.js";
@@ -51,6 +52,7 @@ app.use("/api/invitations", csrfProtection, invitationsRouter);
 app.use("/api/notifications", csrfProtection, notificationsRouter);
 app.use("/api/reports", csrfProtection, reportsRouter);
 app.use("/api/time-controls", timeControlsRouter);
+app.use("/api/engines", enginesRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/admin", csrfProtection, adminRouter);
 

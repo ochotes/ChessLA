@@ -4,10 +4,10 @@ import { api, ApiError } from "../lib/api";
 import { getSocket } from "../lib/socket";
 import { useToast } from "../context/ToastContext";
 import { usePageMeta } from "../hooks/usePageMeta";
-import { IconBolt, IconUsers, IconPlay, IconChevronRight } from "../components/ui/Icons";
-import type { TimeControl } from "../lib/types";
+import { IconBolt, IconUsers, IconPlay, IconChevronRight, IconCpu } from "../components/ui/Icons";
+import type { EngineTier, TimeControl } from "../lib/types";
 
-type Tab = "quick" | "friend" | "create";
+type Tab = "quick" | "friend" | "create" | "engine";
 
 export function PlayPage() {
   usePageMeta("Play chess", "Find an opponent by rating, challenge a friend, or create a private game.");
@@ -22,12 +22,14 @@ export function PlayPage() {
         <TabButton active={tab === "quick"} onClick={() => setTab("quick")} icon={IconBolt} label="Quick match" />
         <TabButton active={tab === "friend"} onClick={() => setTab("friend")} icon={IconUsers} label="Play a friend" />
         <TabButton active={tab === "create"} onClick={() => setTab("create")} icon={IconPlay} label="Create game" />
+        <TabButton active={tab === "engine"} onClick={() => setTab("engine")} icon={IconCpu} label="vs Engine" />
       </div>
 
       <div className="py-6">
         {tab === "quick" && <QuickMatchTab />}
         {tab === "friend" && <PlayFriendTab />}
         {tab === "create" && <CreateGameTab />}
+        {tab === "engine" && <EngineTab />}
       </div>
     </div>
   );
@@ -330,6 +332,115 @@ function CreateGameTab() {
           <p className="mt-2 font-mono text-2xl font-semibold tracking-widest">{code}</p>
         </div>
       )}
+    </div>
+  );
+}
+
+function EngineTab() {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [tiers, setTiers] = useState<EngineTier[] | null>(null);
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [timeControls, setTimeControls] = useState<TimeControl[]>([]);
+  const [selectedTc, setSelectedTc] = useState<string>("");
+  const [side, setSide] = useState<"white" | "black" | "random">("random");
+  const [starting, setStarting] = useState(false);
+
+  useEffect(() => {
+    api.get<{ engines: EngineTier[] }>("/engines").then((r) => {
+      setTiers(r.engines);
+      setSelectedTier((prev) => prev ?? r.engines[0]?.id ?? null);
+    });
+    api.get<{ timeControls: TimeControl[] }>("/time-controls").then((r) => {
+      setTimeControls(r.timeControls);
+      setSelectedTc((prev) => prev || r.timeControls.find((t) => t.category === "rapid")?.id || r.timeControls[0]?.id || "");
+    });
+  }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    function onReady({ gameId }: { gameId: string }) {
+      setStarting(false);
+      navigate(`/game/${gameId}`);
+    }
+    function onError({ message }: { message: string }) {
+      setStarting(false);
+      showToast(message, "danger");
+    }
+    socket.on("engine:ready", onReady);
+    socket.on("engine:error", onError);
+    return () => {
+      socket.off("engine:ready", onReady);
+      socket.off("engine:error", onError);
+    };
+  }, [navigate, showToast]);
+
+  function play() {
+    if (!selectedTier || !selectedTc) return;
+    setStarting(true);
+    getSocket().emit("engine:play", { tierId: selectedTier, timeControlId: selectedTc, side });
+  }
+
+  return (
+    <div>
+      <p className="mb-4 max-w-2xl text-sm text-text-muted">
+        Practice against a computer opponent named for a Claude model generation. Every tier from Haiku up
+        to Mythos is a real chess engine calibrated to that rating band — these games don't affect your rating.
+      </p>
+
+      {!tiers ? (
+        <p className="text-text-muted">Loading engines...</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {tiers.map((tier) => (
+            <button
+              key={tier.id}
+              onClick={() => setSelectedTier(tier.id)}
+              className={`card p-4 text-left transition-colors ${
+                selectedTier === tier.id ? "border-accent ring-1 ring-accent" : "hover:bg-surface-raised"
+              }`}
+              aria-pressed={selectedTier === tier.id}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-display text-lg font-semibold">{tier.name}</span>
+                <span className="rounded-full bg-surface-raised px-2 py-0.5 text-xs font-medium text-text-muted">
+                  {tier.eloMin}&ndash;{tier.eloMax}
+                </span>
+              </div>
+              <p className="mt-1.5 text-sm text-text-muted">{tier.blurb}</p>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-6 grid max-w-md gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="engine-tc" className="label">
+            Time control
+          </label>
+          <select id="engine-tc" className="input" value={selectedTc} onChange={(e) => setSelectedTc(e.target.value)}>
+            {timeControls.map((tc) => (
+              <option key={tc.id} value={tc.id}>
+                {tc.category} &middot; {tc.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="engine-side" className="label">
+            Play as
+          </label>
+          <select id="engine-side" className="input" value={side} onChange={(e) => setSide(e.target.value as typeof side)}>
+            <option value="random">Random</option>
+            <option value="white">White</option>
+            <option value="black">Black</option>
+          </select>
+        </div>
+      </div>
+
+      <button className="btn-primary mt-4" onClick={play} disabled={!selectedTier || !selectedTc || starting}>
+        {starting ? "Starting..." : "Play"}
+      </button>
     </div>
   );
 }

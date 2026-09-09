@@ -333,15 +333,24 @@ function LiveView({ gameId, myUserId, settings }: { gameId: string; myUserId: st
   );
 }
 
-function PlayerHeader({ summary, connected }: { summary: { username: string; country: string; rating: number }; connected: boolean }) {
+function PlayerHeader({ summary, connected }: { summary: { username: string; country: string; rating: number; isEngine?: boolean }; connected: boolean }) {
   return (
     <div className="flex items-center justify-between py-1.5">
       <div className="flex items-center gap-2">
-        <span
-          className={`h-2 w-2 rounded-full ${connected ? "bg-success" : "bg-danger"}`}
-          title={connected ? "Connected" : "Disconnected"}
-          aria-label={connected ? "Connected" : "Disconnected"}
-        />
+        {summary.isEngine ? (
+          <span
+            className="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent"
+            title="Computer opponent"
+          >
+            Engine
+          </span>
+        ) : (
+          <span
+            className={`h-2 w-2 rounded-full ${connected ? "bg-success" : "bg-danger"}`}
+            title={connected ? "Connected" : "Disconnected"}
+            aria-label={connected ? "Connected" : "Disconnected"}
+          />
+        )}
         <span className="font-medium">{summary.username}</span>
         <span className="text-sm text-text-muted">({summary.rating})</span>
       </div>

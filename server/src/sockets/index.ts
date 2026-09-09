@@ -5,6 +5,7 @@ import { COOKIE_NAMES } from "../auth/cookies.js";
 import { gameManager } from "../game/GameManager.js";
 import { matchmakingQueue, playerSummaryFor } from "../matchmaking/MatchmakingQueue.js";
 import { findTimeControl, classifyTimeControl, isValidCustomTimeControl, TIME_CONTROLS, type TimeControlCategory } from "../game/timeControls.js";
+import { getEngineTier } from "../engine/engineTiers.js";
 import { prisma } from "../lib/prisma.js";
 import { sanitizeChatText, isSpam, type RateLimiterState } from "../lib/chatModeration.js";
 import type { GameBroadcaster } from "../game/types.js";
@@ -125,6 +126,23 @@ export function registerSockets(io: Server) {
         if (!info) return socket.emit("matchmaking:error", { message: "Could not load your profile." });
         matchmakingQueue.enqueue(userId, info.summary, info.rating, tc);
         socket.emit("matchmaking:searching", { timeControlId: tc.id });
+      }
+    );
+
+    socket.on(
+      "engine:play",
+      async ({ tierId, timeControlId, side }: { tierId?: string; timeControlId?: string; side?: "white" | "black" | "random" }) => {
+        const tier = tierId ? getEngineTier(tierId) : undefined;
+        if (!tier) return socket.emit("engine:error", { message: "Unknown engine." });
+        const tc = timeControlId ? findTimeControl(timeControlId) : undefined;
+        if (!tc) return socket.emit("engine:error", { message: "Unknown time control." });
+        const info = await playerSummaryFor(userId, tc.category);
+        if (!info) return socket.emit("engine:error", { message: "Could not load your profile." });
+
+        const humanSide: "white" | "black" = side === "white" || side === "black" ? side : Math.random() < 0.5 ? "white" : "black";
+
+        const { id } = await gameManager.createEngineGame({ human: info.summary, humanSide, tier, timeControl: tc });
+        socket.emit("engine:ready", { gameId: id });
       }
     );
 

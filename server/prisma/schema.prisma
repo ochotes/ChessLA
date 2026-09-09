@@ -93,6 +93,12 @@ model Game {
   blackPlayerId       String?
   whitePlayer         User?     @relation("WhiteGames", fields: [whitePlayerId], references: [id])
   blackPlayer         User?     @relation("BlackGames", fields: [blackPlayerId], references: [id])
+  // Exactly one of {whitePlayerId, whiteEngineTier} is set per side. An engine
+  // seat has no User row at all — it's identified purely by the tier id (see
+  // engine/engineTiers.ts) — and engine games are always unrated (isRated
+  // is forced false at creation), so they can never move a human's ladder Elo.
+  whiteEngineTier     String?
+  blackEngineTier     String?
   timeControlCategory String
   timeControlLabel    String
   initialTimeMs       Int
