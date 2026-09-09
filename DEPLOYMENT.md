@@ -36,15 +36,37 @@ a domain, a hosting decision — nothing this build can do on its own).
       and will honestly show small numbers until you have real users
 - [x] No "made with AI" watermark exists anywhere in this codebase
 
+## Two things worth knowing before you pick a host
+
+**ChessLA keeps live state in server memory, not the database.** Active
+games, their clocks, and the matchmaking queue live in the running
+process (`GameManager`, `MatchmakingQueue`) — only completed moves and
+finished games are persisted. This means your hosting plan **must be
+always-on**, never a free "sleeps when idle" tier. If the process restarts
+between requests, every in-progress game is silently lost. This is the
+main reason the Render setup below specifies Render's smallest always-on
+plan (`0.5c-512mb`, ~$7/month, called "Starter" in Render's dashboard)
+rather than the free one — expect a real, if modest, monthly hosting cost.
+
+**`chessla.com` is not available.** I checked directly against the .com
+registry: it's been registered since 2009 and currently sits parked on
+GoDaddy's Afternic resale platform — not obtainable through normal
+registration, only by making an offer to the current owner. `chessla.io`
+and `chessla.app` both look taken too. Options: make an offer via Afternic
+for the parked domain, or register a different name/TLD outright (e.g. a
+different word order, a `.gg`/`.dev`/`.app` suffix, or dropping/adding a
+word). Whichever you land on, the domain is referenced in a handful of
+places once you're ready to swap the placeholder — see the checklist below.
+
 ## What only you can finish
 
-### 1. A real domain and TLS
+### 1. A real domain, then point it at your host
 
-Buy/point a domain at your hosting provider. Almost every modern host
-(Vercel, Netlify, Render, Railway, Fly.io, a VPS behind Caddy/nginx) issues
-a free TLS certificate automatically once the domain's DNS points at it —
-this app doesn't need to manage certificates itself. Once you're serving
-over `https://` in production, set in `server/.env`:
+Once you own a real domain, follow your registrar's instructions to add a
+`CNAME` (or `A` record, depending on the host) pointing it at your hosting
+provider. Render, Railway, Fly.io, and most others issue a free TLS
+certificate automatically once DNS resolves — nothing in this app manages
+certificates itself. Then set in your host's environment variables:
 
 ```
 FORCE_HTTPS=true
@@ -56,22 +78,63 @@ to your real origin. Leaving `FORCE_HTTPS=false` in development is
 intentional — enabling it before you have a certificate would just break
 local dev.
 
-**Recommended topology:** serve the client and API from the same domain
-(e.g., the API behind `/api` on the same host, via a reverse proxy) so
-session cookies stay simple `SameSite=Lax` same-site cookies. If you split
-them onto separate subdomains, you'll need `SameSite=None; Secure` cookies
-and matching CORS — happy to wire that up if that's the route you take.
+The client and API are already served from the same origin in production
+(`server/src/index.ts` serves the built `client/dist` directly, and the
+client only ever calls relative `/api` and `/` paths) — so this is one
+domain, one deploy, no cross-origin cookie complications.
 
-### 2. A production database
+Once you have a real domain, update these placeholder `chessla.com`
+references (all currently using it as an honest placeholder, not a live
+value):
 
-SQLite is for local development only. Before real users sign up, switch
-`server/prisma/schema.prisma`'s datasource to `postgresql` (one line) and
-point `DATABASE_URL` at a managed Postgres instance (Neon, Supabase, RDS,
-your host's managed offering, etc.), then run `npx prisma migrate deploy`.
+- [ ] `client/index.html` — canonical URL, Open Graph tags
+- [ ] `client/public/robots.txt` and `client/public/sitemap.xml`
+- [ ] `client/src/pages/PrivacyPage.tsx` and `TermsPage.tsx` — contact references
+- [ ] `server/src/config.ts` — the `EMAIL_FROM` fallback address
+- [ ] `render.yaml` — nothing hardcoded there; `CLIENT_ORIGIN` is set via the dashboard
+
+### 2. Hosting: a ready-to-use Render Blueprint
+
+`render.yaml` at the repo root defines everything: a single always-on web
+service that builds and serves both the client and API, plus a 1GB
+persistent disk holding the SQLite database file so it survives restarts
+and redeploys. To use it:
+
+1. Push this repo to GitHub (already done).
+2. In the Render dashboard: **New → Blueprint**, point it at this repo.
+   Render reads `render.yaml` and provisions the service and disk.
+3. Fill in the environment variables marked "set during deploy" in Render's
+   UI: `CLIENT_ORIGIN` (your real domain), and optionally `EMAIL_FROM`,
+   `SMTP_*`, `TURNSTILE_SECRET_KEY`. `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET`
+   are generated automatically by the blueprint — you never have to
+   generate or paste those yourself.
+4. Deploy. The start command runs `prisma migrate deploy` before booting,
+   so the database schema is always current.
+5. In Render's service settings, add your custom domain and follow the DNS
+   instructions it gives you.
+
+This was verified locally end-to-end before writing it up: production
+build, `prisma migrate deploy` against a fresh database, the server
+booting with `NODE_ENV=production`, the built client served correctly
+(including client-side route refreshes), and a real registration request
+round-tripping through the database — all passed.
+
+**Not using Render?** The same topology (one always-on Node process,
+`npm run build` then `npm start`, a persistent volume for the SQLite file)
+works on Railway or Fly.io with their equivalent config formats — ask and
+I'll translate `render.yaml` if you'd rather use one of those.
+
+If you outgrow single-writer SQLite later: switch
+`server/prisma/schema.prisma`'s datasource to `postgresql` (one line),
+point `DATABASE_URL` at a managed Postgres instance (Neon, Supabase, your
+host's managed offering, etc.), and run `npx prisma migrate deploy` — every
+field type already used here is Postgres-compatible unchanged.
 
 ### 3. Real secrets
 
-Generate and set in your production environment (never commit these):
+Already handled if you're using the Render Blueprint above — skip this.
+On any other host, generate and set these yourself in your production
+environment (never commit them):
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
@@ -134,11 +197,19 @@ to regenerate every derived size and the social preview image.
 
 ## Before you flip the switch
 
-- [ ] Domain purchased and DNS pointed at your host
+- [ ] A real domain secured — `chessla.com` is taken; pick an alternative
+      or pursue buying the parked one (see above)
+- [ ] Hosting plan is always-on, not a free/sleep-when-idle tier (required —
+      see "live state lives in memory" above)
+- [ ] Domain's DNS pointed at your host
 - [ ] TLS certificate active (usually automatic once DNS resolves)
 - [ ] `FORCE_HTTPS=true` and `CLIENT_ORIGIN` set to the real domain
-- [ ] Production Postgres database provisioned and migrated
-- [ ] Real `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` set
+- [ ] Persistent disk attached for the SQLite file (handled by `render.yaml`
+      if using Render's Blueprint) — or migrated to Postgres
+- [ ] Real `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` set (automatic with
+      the Render Blueprint)
+- [ ] The `chessla.com` placeholder references updated to your real domain
+      (see the checklist in section 1 above)
 - [ ] Decide on analytics now or later (safe to skip)
 - [ ] Decide on Turnstile now or later (honeypot + rate limiting already protect you)
 - [ ] SMTP configured so password resets actually arrive by email

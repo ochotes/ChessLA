@@ -1,0 +1,58 @@
+# Render Blueprint for ChessLA — see https://render.com/docs/blueprint-spec
+#
+# One web service serves both the built client and the API from the same
+# origin (see server/src/index.ts), so there's a single domain to point DNS
+# at and no cross-origin cookie complexity.
+#
+# IMPORTANT: this must run on an always-on plan, never the free tier. Free
+# web services spin down after 15 minutes of inactivity and cold-start on
+# the next request — since active games, clocks, and the matchmaking queue
+# live in this process's memory, not the database, that spin-down would
+# silently lose every in-progress game. "0.5c-512mb" (Render calls this
+# "Starter" in the dashboard, ~$7/month) is their smallest always-on plan.
+#
+# The database is SQLite on a persistent disk rather than a separate managed
+# Postgres instance — simplest path to a real launch with zero extra
+# accounts. If you outgrow single-writer SQLite later, revisit
+# DEPLOYMENT.md's Postgres section; nothing here forecloses that.
+services:
+  - type: web
+    name: chessla
+    runtime: node
+    plan: 0.5c-512mb
+    region: oregon # pick whichever Render region is closest to most players
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: chessla-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/data/prod.db
+      - key: FORCE_HTTPS
+        value: "true"
+      # Set this to your real https://your-domain.com once you have one —
+      # see "Custom domain" in DEPLOYMENT.md. Required before this will work
+      # correctly (CORS, cookies, and the socket connection all key off it).
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: EMAIL_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false

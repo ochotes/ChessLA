@@ -1,5 +1,7 @@
 import express from "express";
 import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
 import { config } from "./config.js";
@@ -60,6 +62,20 @@ app.use("/api/admin", csrfProtection, adminRouter);
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "This resource does not exist." });
 });
+
+// Production serves the built client from this same process and origin —
+// the recommended topology from DEPLOYMENT.md: one domain, no cross-origin
+// cookies, no separate static host to configure. The client already talks
+// to "/api" and "/" (relative, same-origin) so nothing on that side needs
+// to know it's not being proxied by Vite anymore. Any request that reaches
+// this point already isn't "/api/*" — that was fully handled above.
+if (config.isProduction) {
+  const clientDistPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../client/dist");
+  app.use(express.static(clientDistPath));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
 
 // Section 39: never leak stack traces to the client.
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

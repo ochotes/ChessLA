@@ -12,6 +12,8 @@
     "dev:client": "npm run dev --workspace client",
     "build:server": "npm run build --workspace server",
     "build:client": "npm run build --workspace client",
+    "build": "npm run build:client && npm run build:server",
+    "start": "npm run start --workspace server",
     "test:server": "npm run test --workspace server",
     "typecheck": "npm run typecheck --workspace server && npm run typecheck --workspace client",
     "db:migrate": "npm run db:migrate --workspace server",
@@ -27,6 +29,7 @@
     "esbuild@0.28.2": true,
     "esbuild@0.21.5": true,
     "prisma@5.22.0": true,
-    "sharp@0.33.5": true
+    "sharp@0.33.5": true,
+    "stockfish@18.0.8": true
   }
 }
