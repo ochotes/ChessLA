@@ -61,6 +61,20 @@ export function IconCpu(props: IconProps) {
     </svg>
   );
 }
+export function IconMinus(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+export function IconPlus(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
 export function IconTrophy(props: IconProps) {
   return (
     <svg {...base} {...props}>

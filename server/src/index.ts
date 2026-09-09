@@ -47,7 +47,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", csrfProtection, usersRouter);
 app.use("/api/friends", csrfProtection, friendsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
-app.use("/api/games", gamesRouter);
+app.use("/api/games", csrfProtection, gamesRouter);
 app.use("/api/invitations", csrfProtection, invitationsRouter);
 app.use("/api/notifications", csrfProtection, notificationsRouter);
 app.use("/api/reports", csrfProtection, reportsRouter);

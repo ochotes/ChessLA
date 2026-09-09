@@ -3,6 +3,11 @@ import { prisma } from "../lib/prisma.js";
 import { requireAuth, attachUserIfPresent } from "../middleware/auth.js";
 import { gameManager } from "../game/GameManager.js";
 import { getEngineTier } from "../engine/engineTiers.js";
+import { analyzeGame, type GameAnalysis } from "../engine/analyzeGame.js";
+
+// Dedupes concurrent "analyze this game" requests for the same game so two
+// browser tabs (or a retry) never queue up two full engine passes at once.
+const analysisInFlight = new Map<string, Promise<GameAnalysis>>();
 
 /** A finished game's white/black player relation is null exactly when that
  * seat was one of the named engine bots — whiteEngineTier/blackEngineTier
@@ -86,4 +91,44 @@ gamesRouter.get("/:id/live", requireAuth, (req, res) => {
   const game = gameManager.getGame(req.params.id);
   if (!game) return res.status(404).json({ error: "This game is not currently active." });
   res.json({ state: gameManager.toDTO(game) });
+});
+
+/**
+ * Runs (or returns the cached result of) a full engine analysis of a
+ * finished game. Deliberately requires COMPLETED status — analysis must
+ * never be reachable while a game is still being played, or it would hand
+ * either player engine-assisted look-ahead moves mid-game.
+ */
+gamesRouter.post("/:id/analyze", requireAuth, async (req, res) => {
+  const gameId = req.params.id;
+  const game = await prisma.game.findUnique({
+    where: { id: gameId },
+    include: { moves: { orderBy: { moveNumber: "asc" } } },
+  });
+  if (!game) return res.status(404).json({ error: "Game not found." });
+  if (game.status !== "COMPLETED") {
+    return res.status(400).json({ error: "Only completed games can be analyzed." });
+  }
+
+  if (game.analysisJson) {
+    return res.json({ analysis: JSON.parse(game.analysisJson) as GameAnalysis });
+  }
+
+  try {
+    let pending = analysisInFlight.get(gameId);
+    if (!pending) {
+      pending = analyzeGame(
+        game.startingFen,
+        game.moves.map((m) => m.san)
+      );
+      analysisInFlight.set(gameId, pending);
+      pending.finally(() => analysisInFlight.delete(gameId));
+    }
+    const analysis = await pending;
+    await prisma.game.update({ where: { id: gameId }, data: { analysisJson: JSON.stringify(analysis) } });
+    res.json({ analysis });
+  } catch (err) {
+    console.error("Game analysis failed:", err);
+    res.status(502).json({ error: "The analysis engine could not finish. Please try again." });
+  }
 });

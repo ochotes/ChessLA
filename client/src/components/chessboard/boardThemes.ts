@@ -18,7 +18,7 @@ export interface BoardTheme {
 export const BOARD_THEMES: BoardTheme[] = [
   {
     id: "classic",
-    label: "Classic wood",
+    label: "Wood",
     vars: {
       "--board-light": "240 217 181",
       "--board-dark": "181 136 99",
@@ -53,6 +53,32 @@ export const BOARD_THEMES: BoardTheme[] = [
       "--board-legal-dot": "49 99 148",
       "--board-last-move": "158 128 58",
       "--board-check": "200 70 70",
+    },
+  },
+  {
+    id: "falcon",
+    label: "Falcon",
+    vars: {
+      "--board-light": "227 205 173",
+      "--board-dark": "139 74 43",
+      "--board-coord": "245 232 216",
+      "--board-selected": "246 216 101",
+      "--board-legal-dot": "17 94 82",
+      "--board-last-move": "214 171 82",
+      "--board-check": "200 55 55",
+    },
+  },
+  {
+    id: "bubblegum",
+    label: "Bubblegum",
+    vars: {
+      "--board-light": "252 226 236",
+      "--board-dark": "232 137 176",
+      "--board-coord": "120 40 75",
+      "--board-selected": "255 214 92",
+      "--board-legal-dot": "173 43 108",
+      "--board-last-move": "255 176 59",
+      "--board-check": "200 40 40",
     },
   },
 ];

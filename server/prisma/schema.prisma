@@ -117,6 +117,11 @@ model Game {
   createdAt           DateTime  @default(now())
   startedAt           DateTime?
   completedAt          DateTime?
+  // Cached engine analysis (see engine/analyzeGame.ts), computed once on
+  // request and never before the game is COMPLETED — analysis must never be
+  // reachable for an in-progress game, or it would hand a player look-ahead
+  // engine assistance mid-game.
+  analysisJson        String?
 
   moves        Move[]
   events       GameEvent[]

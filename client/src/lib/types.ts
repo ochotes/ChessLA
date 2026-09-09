@@ -85,6 +85,35 @@ export interface GameHistoryEntry {
   completedAt: string;
 }
 
+export type MoveClassification = "best" | "good" | "inaccuracy" | "mistake" | "blunder";
+
+export interface MoveAnalysisEntry {
+  moveNumber: number;
+  player: Side;
+  san: string;
+  evalCp: number | null;
+  mateIn: number | null;
+  classification: MoveClassification;
+  lossCp: number;
+  betterMoveSan: string | null;
+}
+
+export interface SideAnalysisStats {
+  best: number;
+  good: number;
+  inaccuracies: number;
+  mistakes: number;
+  blunders: number;
+}
+
+export interface GameAnalysis {
+  moves: MoveAnalysisEntry[];
+  white: SideAnalysisStats;
+  black: SideAnalysisStats;
+  startingEvalCp: number | null;
+  startingMateIn: number | null;
+}
+
 export interface GameReplay {
   id: string;
   status: string;

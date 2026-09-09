@@ -77,7 +77,7 @@ function sendAndWaitFor(engine: EngineHandle, commands: string[], stopPredicate:
   );
 }
 
-interface BotMoveResult {
+export interface BotMoveResult {
   from: string;
   to: string;
   promotion?: "q" | "r" | "b" | "n";
@@ -174,6 +174,63 @@ export async function quickEvalCp(fen: string): Promise<number> {
         engine.sendCommand("setoption name UCI_LimitStrength value false");
         engine.sendCommand(`position fen ${fen}`);
         engine.sendCommand("go depth 8");
+      })
+  );
+}
+
+export interface PositionEval {
+  /** Centipawns from the side-to-move's perspective, or null when mateIn is set. */
+  evalCp: number | null;
+  /** Positive = the side to move delivers mate; negative = gets mated. Null outside forced mate lines. */
+  mateIn: number | null;
+  bestMove: BotMoveResult;
+}
+
+/**
+ * A full-strength evaluation of a position, used only for post-game analysis
+ * — never for bot moves, so a bot's own advertised Elo never gets a hidden
+ * strength boost through this path. Always plays at full strength
+ * (UCI_LimitStrength off) regardless of which engine tier, if any, the game
+ * was played against, because analysis is meant to show the objectively
+ * best move, not "what a 600-rated bot would have found."
+ */
+export async function analyzePosition(fen: string, moveTimeMs: number): Promise<PositionEval> {
+  const engine = await getEngine();
+  return sendAndWaitForAnalysis(engine, fen, moveTimeMs);
+}
+
+function sendAndWaitForAnalysis(engine: EngineHandle, fen: string, moveTimeMs: number): Promise<PositionEval> {
+  return withStdoutCapture(
+    (onLine) =>
+      new Promise<PositionEval>((resolve, reject) => {
+        let evalCp: number | null = null;
+        let mateIn: number | null = null;
+        const timer = setTimeout(() => reject(new Error("analyzePosition timed out")), moveTimeMs + 5000);
+        onLine((line) => {
+          const cpMatch = line.match(/score cp (-?\d+)/);
+          if (cpMatch) {
+            evalCp = Number(cpMatch[1]);
+            mateIn = null;
+          }
+          const mateMatch = line.match(/score mate (-?\d+)/);
+          if (mateMatch) {
+            mateIn = Number(mateMatch[1]);
+            evalCp = null;
+          }
+          if (line.startsWith("bestmove")) {
+            clearTimeout(timer);
+            const uci = line.split(" ")[1];
+            if (!uci || uci === "(none)") {
+              // Checkmate or stalemate — there is no move to suggest.
+              resolve({ evalCp, mateIn, bestMove: { from: "", to: "" } });
+            } else {
+              resolve({ evalCp, mateIn, bestMove: parseUciMove(uci) });
+            }
+          }
+        });
+        engine.sendCommand("setoption name UCI_LimitStrength value false");
+        engine.sendCommand(`position fen ${fen}`);
+        engine.sendCommand(`go movetime ${moveTimeMs}`);
       })
   );
 }

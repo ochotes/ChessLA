@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Chess } from "chess.js";
-import { api } from "../lib/api";
+import { ApiError, api } from "../lib/api";
 import { getSocket } from "../lib/socket";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { useBoardZoom } from "../hooks/useBoardZoom";
 import { Board } from "../components/chessboard/Board";
 import { Clock } from "../components/chessboard/Clock";
 import { MoveList } from "../components/chessboard/MoveList";
@@ -13,8 +14,59 @@ import { ChatPanel, type ChatMessageItem } from "../components/chessboard/ChatPa
 import { GameOverModal } from "../components/chessboard/GameOverModal";
 import { Modal } from "../components/ui/Modal";
 import { SkeletonBoard } from "../components/ui/Skeleton";
-import { IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight, IconFlag, IconHandshake } from "../components/ui/Icons";
-import type { GameReplay, GameStateDTO, UserSettings } from "../lib/types";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
+  IconFlag,
+  IconHandshake,
+  IconMinus,
+  IconPlus,
+} from "../components/ui/Icons";
+import type { GameAnalysis, GameReplay, GameStateDTO, MoveClassification, UserSettings } from "../lib/types";
+
+/** A compact +/- control shared by the live and replay views — the board's
+ * default size doesn't fit every screen or seating distance, so this lets
+ * either view scale it (and everything aligned to its column width) between
+ * 70% and 160%, remembered per device via useBoardZoom. */
+function BoardZoomControl({
+  zoom,
+  onZoomIn,
+  onZoomOut,
+  canZoomIn,
+  canZoomOut,
+}: {
+  zoom: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  canZoomIn: boolean;
+  canZoomOut: boolean;
+}) {
+  return (
+    <div className="mb-1.5 flex items-center justify-end gap-1" role="group" aria-label="Board zoom">
+      <button
+        type="button"
+        onClick={onZoomOut}
+        disabled={!canZoomOut}
+        aria-label="Zoom out"
+        className="rounded-lg p-1.5 text-text-muted hover:bg-surface-raised hover:text-text disabled:pointer-events-none disabled:opacity-40"
+      >
+        <IconMinus className="h-4 w-4" />
+      </button>
+      <span className="w-10 text-center text-xs tabular-nums text-text-muted">{zoom}%</span>
+      <button
+        type="button"
+        onClick={onZoomIn}
+        disabled={!canZoomIn}
+        aria-label="Zoom in"
+        className="rounded-lg p-1.5 text-text-muted hover:bg-surface-raised hover:text-text disabled:pointer-events-none disabled:opacity-40"
+      >
+        <IconPlus className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
 
 type PromotionPiece = "q" | "r" | "b" | "n";
 
@@ -107,6 +159,7 @@ function LiveView({ gameId, myUserId, settings }: { gameId: string; myUserId: st
   const [showResignConfirm, setShowResignConfirm] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const [drawCooldownUntil, setDrawCooldownUntil] = useState(0);
+  const zoom = useBoardZoom();
 
   useEffect(() => {
     const socket = getSocket();
@@ -228,7 +281,8 @@ function LiveView({ gameId, myUserId, settings }: { gameId: string; myUserId: st
 
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full" style={{ maxWidth: zoom.maxWidthPx }}>
+        <BoardZoomControl zoom={zoom.zoom} onZoomIn={zoom.zoomIn} onZoomOut={zoom.zoomOut} canZoomIn={zoom.canZoomIn} canZoomOut={zoom.canZoomOut} />
         <PlayerHeader
           summary={orientation === "white" ? state.black : state.white}
           connected={orientation === "white" ? state.connection.black : state.connection.white}
@@ -373,13 +427,49 @@ function gameStatusLabel(state: GameStateDTO, myColor: "w" | "b" | null): string
 // Replay / analysis
 // ---------------------------------------------------------------------------
 
+const CLASSIFICATION_LABEL: Record<MoveClassification, string> = {
+  best: "Best",
+  good: "Good",
+  inaccuracy: "Inaccuracy",
+  mistake: "Mistake",
+  blunder: "Blunder",
+};
+
+function evalToWhitePercent(evalCp: number | null, mateIn: number | null): number {
+  if (mateIn !== null) return mateIn > 0 ? 100 : 0;
+  const clamped = Math.max(-1000, Math.min(1000, evalCp ?? 0));
+  return 50 + (clamped / 1000) * 50;
+}
+
+function evalLabel(evalCp: number | null, mateIn: number | null): string {
+  if (mateIn !== null) return `M${Math.abs(mateIn)}`;
+  const pawns = (evalCp ?? 0) / 100;
+  return `${pawns > 0 ? "+" : ""}${pawns.toFixed(1)}`;
+}
+
 function ReplayView({ game, myUsername, settings }: { game: GameReplay; myUsername: string | null; settings: UserSettings | null }) {
   const [moveIndex, setMoveIndex] = useState(game.moves.length - 1);
+  const { showToast } = useToast();
+  const zoom = useBoardZoom();
+  const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const displayedFen = moveIndex === -1 ? game.startingFen : game.moves[moveIndex]?.fenAfter ?? game.currentFen;
 
   const orientation =
     myUsername && game.black?.username === myUsername && game.white?.username !== myUsername ? "black" : "white";
+
+  async function runAnalysis() {
+    setAnalyzing(true);
+    try {
+      const { analysis: result } = await api.post<{ analysis: GameAnalysis }>(`/games/${game.id}/analyze`, {});
+      setAnalysis(result);
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "The analysis engine could not finish. Please try again.", "danger");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
 
   const materialBalance = useMemo(() => {
     try {
@@ -421,10 +511,14 @@ function ReplayView({ game, myUsername, settings }: { game: GameReplay; myUserna
   const clampedBalance = Math.max(-9, Math.min(9, materialBalance));
   const whitePercent = 50 + (clampedBalance / 9) * 50;
 
+  const currentMoveAnalysis = moveIndex >= 0 ? analysis?.moves[moveIndex] : undefined;
+  const evalCpNow = moveIndex === -1 ? analysis?.startingEvalCp ?? null : currentMoveAnalysis?.evalCp ?? null;
+  const mateInNow = moveIndex === -1 ? analysis?.startingMateIn ?? null : currentMoveAnalysis?.mateIn ?? null;
+
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="mx-auto w-full" style={{ maxWidth: zoom.maxWidthPx }}>
+        <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="font-semibold">
               {game.white?.username ?? "White"} vs {game.black?.username ?? "Black"}
@@ -433,6 +527,7 @@ function ReplayView({ game, myUsername, settings }: { game: GameReplay; myUserna
               {resultLabel} &middot; {(game.terminationReason ?? "").replace(/_/g, " ")} &middot; {game.timeControl}
             </p>
           </div>
+          <BoardZoomControl zoom={zoom.zoom} onZoomIn={zoom.zoomIn} onZoomOut={zoom.zoomOut} canZoomIn={zoom.canZoomIn} canZoomOut={zoom.canZoomOut} />
         </div>
 
         <Board
@@ -461,21 +556,69 @@ function ReplayView({ game, myUsername, settings }: { game: GameReplay; myUserna
             <IconChevronsRight className="h-5 w-5" />
           </button>
         </div>
+
+        {currentMoveAnalysis && currentMoveAnalysis.classification !== "best" && currentMoveAnalysis.classification !== "good" && (
+          <div className="mt-3 card border-warning/40 bg-warning/10 p-3 text-sm">
+            <p className="font-medium">
+              {CLASSIFICATION_LABEL[currentMoveAnalysis.classification]}: move {currentMoveAnalysis.moveNumber}
+              {currentMoveAnalysis.player === "black" ? "..." : "."} {currentMoveAnalysis.san}
+            </p>
+            {currentMoveAnalysis.betterMoveSan && (
+              <p className="mt-0.5 text-text-muted">{currentMoveAnalysis.betterMoveSan} kept more of the advantage.</p>
+            )}
+          </div>
+        )}
       </div>
 
       <aside className="space-y-4">
         <div className="card p-3">
-          <p className="mb-1.5 text-sm font-medium">Material balance</p>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-[#15181a]">
-            <div className="h-full bg-[#f5f5f0] transition-all" style={{ width: `${whitePercent}%` }} />
-          </div>
-          <p className="mt-1.5 text-xs text-text-muted">
-            {materialBalance === 0 ? "Even material" : `${materialBalance > 0 ? "White" : "Black"} ahead by ${Math.abs(materialBalance)} point${Math.abs(materialBalance) === 1 ? "" : "s"}`}
-            {" "}&middot; based on piece count, not a full engine evaluation
-          </p>
+          {analysis ? (
+            <>
+              <div className="mb-1.5 flex items-center justify-between">
+                <p className="text-sm font-medium">Evaluation</p>
+                <span className="font-mono text-sm tabular-nums text-text-muted">{evalLabel(evalCpNow, mateInNow)}</span>
+              </div>
+              <div className="h-3 w-full overflow-hidden rounded-full bg-[#15181a]">
+                <div className="h-full bg-[#f5f5f0] transition-all" style={{ width: `${evalToWhitePercent(evalCpNow, mateInNow)}%` }} />
+              </div>
+              <p className="mt-1.5 text-xs text-text-muted">Positive favors White &middot; full-strength engine evaluation</p>
+
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                <dt className="text-text-muted">White</dt>
+                <dt className="text-text-muted">Black</dt>
+                <dd>
+                  {analysis.white.blunders} blunder{analysis.white.blunders === 1 ? "" : "s"}, {analysis.white.mistakes} mistake
+                  {analysis.white.mistakes === 1 ? "" : "s"}, {analysis.white.inaccuracies} inaccurac{analysis.white.inaccuracies === 1 ? "y" : "ies"}
+                </dd>
+                <dd>
+                  {analysis.black.blunders} blunder{analysis.black.blunders === 1 ? "" : "s"}, {analysis.black.mistakes} mistake
+                  {analysis.black.mistakes === 1 ? "" : "s"}, {analysis.black.inaccuracies} inaccurac{analysis.black.inaccuracies === 1 ? "y" : "ies"}
+                </dd>
+              </dl>
+            </>
+          ) : (
+            <>
+              <p className="mb-1.5 text-sm font-medium">Material balance</p>
+              <div className="h-3 w-full overflow-hidden rounded-full bg-[#15181a]">
+                <div className="h-full bg-[#f5f5f0] transition-all" style={{ width: `${whitePercent}%` }} />
+              </div>
+              <p className="mt-1.5 text-xs text-text-muted">
+                {materialBalance === 0 ? "Even material" : `${materialBalance > 0 ? "White" : "Black"} ahead by ${Math.abs(materialBalance)} point${Math.abs(materialBalance) === 1 ? "" : "s"}`}
+                {" "}&middot; based on piece count, not a full engine evaluation
+              </p>
+              <button className="btn-secondary mt-3 w-full" onClick={runAnalysis} disabled={analyzing}>
+                {analyzing ? "Analyzing... this can take a minute" : "Analyze game"}
+              </button>
+            </>
+          )}
         </div>
 
-        <MoveList moves={game.moves.map((m) => m.san)} currentIndex={moveIndex} onSelect={setMoveIndex} />
+        <MoveList
+          moves={game.moves.map((m) => m.san)}
+          currentIndex={moveIndex}
+          onSelect={setMoveIndex}
+          classifications={analysis?.moves.map((m) => m.classification)}
+        />
       </aside>
     </div>
   );
