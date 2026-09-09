@@ -165,7 +165,7 @@ export function Board({
   return (
     <div className="relative w-full select-none" style={{ touchAction: "none", ...(theme.vars as CSSProperties) }}>
       <div
-        className="grid aspect-square w-full grid-cols-8 overflow-hidden rounded-lg border border-border shadow-card"
+        className="grid aspect-square w-full grid-cols-8 grid-rows-[repeat(8,minmax(0,1fr))] overflow-hidden rounded-lg border border-border shadow-card"
         role="grid"
         aria-label="Chess board"
       >

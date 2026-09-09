@@ -12,6 +12,7 @@ import { Clock } from "../components/chessboard/Clock";
 import { MoveList } from "../components/chessboard/MoveList";
 import { ChatPanel, type ChatMessageItem } from "../components/chessboard/ChatPanel";
 import { GameOverModal } from "../components/chessboard/GameOverModal";
+import { QuickAppearanceSettings } from "../components/chessboard/QuickAppearanceSettings";
 import { Modal } from "../components/ui/Modal";
 import { SkeletonBoard } from "../components/ui/Skeleton";
 import {
@@ -36,15 +37,17 @@ function BoardZoomControl({
   onZoomOut,
   canZoomIn,
   canZoomOut,
+  noMargin,
 }: {
   zoom: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
   canZoomIn: boolean;
   canZoomOut: boolean;
+  noMargin?: boolean;
 }) {
   return (
-    <div className="mb-1.5 flex items-center justify-end gap-1" role="group" aria-label="Board zoom">
+    <div className={`flex items-center justify-end gap-1 ${noMargin ? "" : "mb-1.5"}`} role="group" aria-label="Board zoom">
       <button
         type="button"
         onClick={onZoomOut}
@@ -84,6 +87,14 @@ export function GamePage() {
 
   useEffect(() => {
     api.get<{ settings: UserSettings }>("/users/me/settings").then((r) => setSettings(r.settings)).catch(() => {});
+  }, []);
+
+  // The quick appearance panel (board theme, piece style, light/dark) saves
+  // through the server itself — this just keeps this page's own copy of
+  // settings in sync so the board re-renders immediately, in both the live
+  // and replay views.
+  const applySettingsPatch = useCallback((patch: Partial<UserSettings>) => {
+    setSettings((prev) => (prev ? { ...prev, ...patch } : prev));
   }, []);
 
   useEffect(() => {
@@ -138,11 +149,11 @@ export function GamePage() {
   }
 
   if (mode === "replay" && replayGame) {
-    return <ReplayView game={replayGame} myUsername={user?.username ?? null} settings={settings} />;
+    return <ReplayView game={replayGame} myUsername={user?.username ?? null} settings={settings} onSettingsChange={applySettingsPatch} />;
   }
 
   if (mode === "live" && id && user) {
-    return <LiveView gameId={id} myUserId={user.id} settings={settings} />;
+    return <LiveView gameId={id} myUserId={user.id} settings={settings} onSettingsChange={applySettingsPatch} />;
   }
 
   return null;
@@ -152,7 +163,17 @@ export function GamePage() {
 // Live game
 // ---------------------------------------------------------------------------
 
-function LiveView({ gameId, myUserId, settings }: { gameId: string; myUserId: string; settings: UserSettings | null }) {
+function LiveView({
+  gameId,
+  myUserId,
+  settings,
+  onSettingsChange,
+}: {
+  gameId: string;
+  myUserId: string;
+  settings: UserSettings | null;
+  onSettingsChange: (patch: Partial<UserSettings>) => void;
+}) {
   const { showToast } = useToast();
   const [state, setState] = useState<GameStateDTO | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessageItem[]>([]);
@@ -282,7 +303,10 @@ function LiveView({ gameId, myUserId, settings }: { gameId: string; myUserId: st
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="mx-auto w-full" style={{ maxWidth: zoom.maxWidthPx }}>
-        <BoardZoomControl zoom={zoom.zoom} onZoomIn={zoom.zoomIn} onZoomOut={zoom.zoomOut} canZoomIn={zoom.canZoomIn} canZoomOut={zoom.canZoomOut} />
+        <div className="mb-1.5 flex items-center justify-end gap-1">
+          <QuickAppearanceSettings settings={settings} onSettingsChange={onSettingsChange} />
+          <BoardZoomControl zoom={zoom.zoom} onZoomIn={zoom.zoomIn} onZoomOut={zoom.zoomOut} canZoomIn={zoom.canZoomIn} canZoomOut={zoom.canZoomOut} noMargin />
+        </div>
         <PlayerHeader
           summary={orientation === "white" ? state.black : state.white}
           connected={orientation === "white" ? state.connection.black : state.connection.white}
@@ -447,7 +471,17 @@ function evalLabel(evalCp: number | null, mateIn: number | null): string {
   return `${pawns > 0 ? "+" : ""}${pawns.toFixed(1)}`;
 }
 
-function ReplayView({ game, myUsername, settings }: { game: GameReplay; myUsername: string | null; settings: UserSettings | null }) {
+function ReplayView({
+  game,
+  myUsername,
+  settings,
+  onSettingsChange,
+}: {
+  game: GameReplay;
+  myUsername: string | null;
+  settings: UserSettings | null;
+  onSettingsChange: (patch: Partial<UserSettings>) => void;
+}) {
   const [moveIndex, setMoveIndex] = useState(game.moves.length - 1);
   const { showToast } = useToast();
   const zoom = useBoardZoom();
@@ -527,7 +561,10 @@ function ReplayView({ game, myUsername, settings }: { game: GameReplay; myUserna
               {resultLabel} &middot; {(game.terminationReason ?? "").replace(/_/g, " ")} &middot; {game.timeControl}
             </p>
           </div>
-          <BoardZoomControl zoom={zoom.zoom} onZoomIn={zoom.zoomIn} onZoomOut={zoom.zoomOut} canZoomIn={zoom.canZoomIn} canZoomOut={zoom.canZoomOut} />
+          <div className="flex items-center gap-1">
+            <QuickAppearanceSettings settings={settings} onSettingsChange={onSettingsChange} />
+            <BoardZoomControl zoom={zoom.zoom} onZoomIn={zoom.zoomIn} onZoomOut={zoom.zoomOut} canZoomIn={zoom.canZoomIn} canZoomOut={zoom.canZoomOut} noMargin />
+          </div>
         </div>
 
         <Board
