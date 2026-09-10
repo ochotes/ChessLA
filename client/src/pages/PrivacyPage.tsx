@@ -114,7 +114,7 @@ export function PrivacyPage() {
 
         <p className="border-t border-border pt-4 text-xs text-text-muted">
           This page describes ChessLA's actual data practices as implemented. It is provided for
-          transparency and is not a substitute for legal advice — before a public launch, have it
+          transparency and is not a substitute for legal advice. Before a public launch, have it
           reviewed by counsel familiar with the privacy laws of the regions you operate in (for
           example GDPR in the EU/UK or CCPA in California).
         </p>

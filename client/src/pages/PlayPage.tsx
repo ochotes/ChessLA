@@ -385,7 +385,7 @@ function EngineTab() {
     <div>
       <p className="mb-4 max-w-2xl text-sm text-text-muted">
         Practice against a computer opponent named for a Claude model generation. Every tier from Haiku up
-        to Mythos is a real chess engine calibrated to that rating band — these games don't affect your rating.
+        to Mythos is a real chess engine calibrated to that rating band. These games don't affect your rating.
       </p>
 
       {!tiers ? (

@@ -76,7 +76,7 @@ export function TermsPage() {
           <p className="mt-2 text-text-muted">
             Administrators can review reported games and, in rare cases such as confirmed cheating,
             correct a game's recorded result. Every such correction is logged with the administrator who
-            made it, the reason given, and the prior state — administrators cannot silently alter a
+            made it, the reason given, and the prior state. Administrators cannot silently alter a
             completed game.
           </p>
         </section>
@@ -111,7 +111,7 @@ export function TermsPage() {
 
         <p className="border-t border-border pt-4 text-xs text-text-muted">
           This page describes ChessLA's actual policies as implemented in this build. It is provided for
-          transparency and is not a substitute for legal advice — have it reviewed by counsel before a
+          transparency and is not a substitute for legal advice. Have it reviewed by counsel before a
           public launch.
         </p>
       </div>

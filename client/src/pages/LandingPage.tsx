@@ -11,7 +11,7 @@ const PREVIEW_FEN = "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 w 
 
 export function LandingPage() {
   usePageMeta(
-    "ChessLA — Real-Time Multiplayer Chess",
+    "ChessLA | Real-Time Multiplayer Chess",
     "Play real-time multiplayer chess on ChessLA. Find an opponent by rating, challenge friends, and track your rating across bullet, blitz, rapid, and classical chess."
   );
   const { user } = useAuth();
@@ -73,7 +73,7 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="text-center text-2xl font-semibold">Built for players who take the game seriously</h2>
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Feature icon={IconShield} title="Server-verified moves" description="Every move is checked against the full rules of chess on the server — castling, en passant, promotion, checks, and all draw conditions." />
+            <Feature icon={IconShield} title="Server-verified moves" description="Every move is checked against the full rules of chess on the server: castling, en passant, promotion, checks, and all draw conditions." />
             <Feature icon={IconBolt} title="Real time controls" description="Bullet, blitz, rapid, and classical, with clocks synchronized to the server so no one can win by editing their device clock." />
             <Feature icon={IconUsers} title="Matchmaking and friends" description="Quick Match pairs you with a similarly rated opponent, or challenge a specific friend and share a game link." />
             <Feature icon={IconTrophy} title="Ratings and leaderboards" description="A separate rating per time control, full game history, and global, country, and friends leaderboards." />

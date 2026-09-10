@@ -9,7 +9,7 @@ import { useEffect } from "react";
 export function usePageMeta(title: string, description?: string) {
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = title.includes("ChessLA") ? title : `${title} — ChessLA`;
+    document.title = title.includes("ChessLA") ? title : `${title} | ChessLA`;
 
     let descriptionTag: HTMLMetaElement | null = null;
     let previousDescription: string | null = null;

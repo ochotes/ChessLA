@@ -6,11 +6,11 @@ const REASON_LABEL: Record<string, string> = {
   checkmate: "by checkmate",
   resignation: "by resignation",
   timeout: "on time",
-  stalemate: "— stalemate",
+  stalemate: "by stalemate",
   draw_agreement: "by agreement",
   threefold_repetition: "by threefold repetition",
   fifty_move_rule: "by the fifty-move rule",
-  insufficient_material: "— insufficient material",
+  insufficient_material: "by insufficient material",
   abandonment: "by abandonment",
 };
 

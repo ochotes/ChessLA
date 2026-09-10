@@ -16,7 +16,7 @@ const STEPS = [
   {
     icon: IconShield,
     title: "3. Play a fair game",
-    description: "Every move you make is checked by the server against the complete rules of chess before it's accepted — illegal moves are simply rejected, and the clock is tracked server-side so it can't be manipulated.",
+    description: "Every move you make is checked by the server against the complete rules of chess before it's accepted. Illegal moves are simply rejected, and the clock is tracked server-side so it can't be manipulated.",
   },
   {
     icon: IconTrophy,
