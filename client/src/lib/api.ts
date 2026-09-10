@@ -19,7 +19,43 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// The access token cookie is a short-lived JWT (15 minutes — see
+// server/src/config.ts). Nothing else in the app ever calls /auth/refresh
+// (AuthContext's own "refreshUser" just re-fetches the current profile via
+// /auth/session, a different thing despite the similar name), and there is
+// a real 30-day refresh token sitting unused in a cookie the whole time —
+// so without this, every session would silently start failing every
+// request 15 minutes in, mid-game included, with no way back short of a
+// fresh login. One in-flight refresh is shared by every caller that hits
+// this at once, so a burst of requests after expiry doesn't fire a dozen
+// concurrent refresh calls.
+let refreshInFlight: Promise<boolean> | null = null;
+
+// Exported so every caller — this module's own 401-retry below, and
+// AuthContext's fallback for /auth/session (which never returns a 401 to
+// retry on in the first place, by design) — shares the exact same in-flight
+// promise. Refresh tokens are rotated (single-use) on the server, so two
+// independent, undeduped callers racing to refresh at once isn't just
+// wasteful: only one can actually win, and the other(s) fail outright.
+export function refreshSession(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = fetch("/api/auth/refresh", { method: "POST", credentials: "include" })
+      .then((res) => res.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
+// Endpoints where a 401 means something other than "the access token
+// expired" — retrying them after a refresh attempt would be pointless
+// (login/register: wrong credentials) or actively wrong (refresh itself:
+// would recurse forever if it also 401'd).
+const NO_REFRESH_RETRY = new Set(["/auth/login", "/auth/register", "/auth/refresh", "/auth/logout"]);
+
+async function request<T>(path: string, init?: RequestInit, isRetry = false): Promise<T> {
   const method = (init?.method ?? "GET").toUpperCase();
   const headers = new Headers(init?.headers);
   if (init?.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
@@ -37,6 +73,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers,
     credentials: "include",
   });
+
+  if (res.status === 401 && !isRetry && !NO_REFRESH_RETRY.has(path)) {
+    const refreshed = await refreshSession();
+    if (refreshed) return request<T>(path, init, true);
+  }
 
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const body = isJson ? await res.json().catch(() => null) : null;

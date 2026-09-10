@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validateBody } from "../middleware/validate.js";
-import { notifyUser } from "../sockets/notify.js";
+import { notifyUser, isUserOnline } from "../sockets/notify.js";
 
 export const friendsRouter = Router();
 friendsRouter.use(requireAuth);
@@ -24,6 +24,7 @@ friendsRouter.get("/", async (req, res) => {
         country: f.country,
         profilePicture: f.profilePicture,
         rating: f.rating!.blitzRating,
+        online: isUserOnline(f.id),
       })),
   });
 });

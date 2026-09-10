@@ -54,6 +54,10 @@ export class GameClock {
     return this.remaining(side) <= 0;
   }
 
+  get isPaused(): boolean {
+    return !this.running;
+  }
+
   pause() {
     // Used while a player is disconnected and a grace period is running, so
     // thinking time doesn't silently drain during a dropped connection grace

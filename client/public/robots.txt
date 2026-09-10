@@ -3,5 +3,11 @@ Allow: /
 Disallow: /admin
 Disallow: /settings
 Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /play
+Disallow: /game
+Disallow: /friends
+Disallow: /history
+Disallow: /invite
 
 Sitemap: https://www.chessla.com/sitemap.xml

@@ -19,9 +19,11 @@ function tc(category: TimeControlCategory, minutes: number, incrementSeconds: nu
   };
 }
 
-// Section 7: the built-in time control catalog. Administrators can extend
-// this list (see server/src/admin/timeControls.ts) without touching the
-// matchmaking or clock code, both of which only depend on this shape.
+// Section 7: the built-in time control catalog. Matchmaking and the clock
+// only depend on this shape, so extending the list here is safe — but there
+// is currently no admin UI to do that at runtime; adding one is still an
+// open item from the original spec ("Allow administrators to add additional
+// time controls"), not something already built elsewhere.
 export const TIME_CONTROLS: TimeControl[] = [
   tc("bullet", 1, 0),
   tc("bullet", 2, 1),

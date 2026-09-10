@@ -22,7 +22,11 @@ export function ForgotPasswordPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await api.post("/auth/forgot-password", { email });
+      // The honeypot value has to actually reach the server for its own
+      // validation (forgotPasswordSchema's website field) to mean anything
+      // — the early-return above only stops a bot that runs this JS at
+      // all, not one that calls the API directly.
+      await api.post("/auth/forgot-password", { email, website });
       setSent(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");

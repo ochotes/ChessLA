@@ -314,7 +314,11 @@ function LiveView({
         <Clock
           label={orientation === "white" ? "Black" : "White"}
           remainingMs={orientation === "white" ? state.clocks.black : state.clocks.white}
-          isRunning={state.status === "IN_PROGRESS" && state.turn === (orientation === "white" ? "b" : "w")}
+          isRunning={
+            state.status === "IN_PROGRESS" &&
+            state.turn === (orientation === "white" ? "b" : "w") &&
+            (orientation === "white" ? state.connection.black : state.connection.white)
+          }
         />
         <div className="my-2">
           <Board
@@ -333,7 +337,11 @@ function LiveView({
         <Clock
           label={orientation === "white" ? "White" : "Black"}
           remainingMs={orientation === "white" ? state.clocks.white : state.clocks.black}
-          isRunning={state.status === "IN_PROGRESS" && state.turn === (orientation === "white" ? "w" : "b")}
+          isRunning={
+            state.status === "IN_PROGRESS" &&
+            state.turn === (orientation === "white" ? "w" : "b") &&
+            (orientation === "white" ? state.connection.white : state.connection.black)
+          }
         />
         <PlayerHeader
           summary={orientation === "white" ? state.white : state.black}

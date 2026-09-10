@@ -23,18 +23,23 @@ export function useRealtimeNotifications() {
       showToast("Your challenge was accepted!", "success");
       navigate(`/game/${payload.gameId}`);
     }
-    function onFriendRequestOrAccept() {
-      // Notification list (bell) re-fetches lazily on open; a toast is enough here.
+    function onFriendRequest(payload: { from: string }) {
+      showToast(`${payload.from} sent you a friend request.`, "info");
+    }
+    function onFriendAccepted(payload: { by: string }) {
+      showToast(`${payload.by} accepted your friend request.`, "success");
     }
 
     socket.on("invitation:received", onInvitationReceived);
     socket.on("invitation:accepted", onInvitationAccepted);
-    socket.on("presence:update", onFriendRequestOrAccept);
+    socket.on("friend:request", onFriendRequest);
+    socket.on("friend:accepted", onFriendAccepted);
 
     return () => {
       socket.off("invitation:received", onInvitationReceived);
       socket.off("invitation:accepted", onInvitationAccepted);
-      socket.off("presence:update", onFriendRequestOrAccept);
+      socket.off("friend:request", onFriendRequest);
+      socket.off("friend:accepted", onFriendAccepted);
     };
   }, [user, showToast, navigate]);
 }

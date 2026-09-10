@@ -14,7 +14,7 @@ export interface MoveTimingSample {
 }
 
 export interface AntiCheatFlag {
-  type: "inhuman_speed" | "uniform_timing" | "perfect_long_game_no_time_use";
+  type: "inhuman_speed" | "uniform_timing";
   detail: string;
 }
 

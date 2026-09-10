@@ -16,11 +16,17 @@ export interface RateLimiterState {
   repeatCount: number;
 }
 
+function escapeRegExp(term: string): string {
+  return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export function sanitizeChatText(raw: string): string {
   let text = raw.trim().slice(0, MAX_MESSAGE_LENGTH);
   for (const term of BLOCKED_SUBSTRINGS) {
     if (text.toLowerCase().includes(term)) {
-      text = text.replace(new RegExp(term, "gi"), "[link removed]");
+      // Unescaped, "www." would compile to /www./ — "any character" after
+      // "www", not a literal dot — over-redacting things like "www much fun".
+      text = text.replace(new RegExp(escapeRegExp(term), "gi"), "[link removed]");
     }
   }
   return text;

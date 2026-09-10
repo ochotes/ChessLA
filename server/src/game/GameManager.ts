@@ -451,6 +451,18 @@ export class GameManager {
     const player = side === "white" ? game.white : game.black;
     player.connected = false;
     player.disconnectedAt = Date.now();
+
+    // Only pause if it's actually this player's own turn — the clock only
+    // ever drains for whoever is on move (see GameClock.remaining), so a
+    // disconnect while it's the OPPONENT's turn has no time to protect, and
+    // pausing anyway would hand the still-connected opponent free extra
+    // thinking time for no reason.
+    const toMove: Side = game.engine.turn === "w" ? "white" : "black";
+    if (toMove === side) {
+      game.clock.pause();
+      this.broadcaster?.emitClock(game.id, game.clock.snapshot());
+    }
+
     await prisma.gameEvent.create({ data: { gameId: game.id, userId, type: "disconnect" } });
     this.broadcaster?.emitConnectionChange(game.id, side, false);
   }
@@ -470,6 +482,13 @@ export class GameManager {
     player.connected = true;
     player.disconnectedAt = null;
     if (wasDisconnected && game.status === "IN_PROGRESS") {
+      // Only resume a clock this disconnect actually paused — calling
+      // resume() on a clock that was never paused would reset its internal
+      // turnStartedAt and silently hand the side to move free extra time.
+      if (game.clock.isPaused) {
+        game.clock.resume();
+        this.broadcaster?.emitClock(game.id, game.clock.snapshot());
+      }
       await prisma.gameEvent.create({ data: { gameId: game.id, userId, type: "reconnect" } });
       this.broadcaster?.emitConnectionChange(game.id, side, true);
     }

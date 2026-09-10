@@ -9,6 +9,7 @@ import { getEngineTier } from "../engine/engineTiers.js";
 import { prisma } from "../lib/prisma.js";
 import { sanitizeChatText, isSpam, type RateLimiterState } from "../lib/chatModeration.js";
 import type { GameBroadcaster } from "../game/types.js";
+import { attachPresenceChecker } from "./notify.js";
 
 interface AuthedSocket extends Socket {
   data: {
@@ -46,6 +47,7 @@ export function registerSockets(io: Server) {
   };
   gameManager.setBroadcaster(broadcaster);
   gameManager.start();
+  attachPresenceChecker((userId) => presence.has(userId));
 
   matchmakingQueue.setOnMatch((gameId, players) => {
     for (const p of players) {

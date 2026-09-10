@@ -67,7 +67,11 @@ export function RegisterPage() {
 
     setSubmitting(true);
     try {
-      await register(values);
+      // The honeypot value has to actually reach the server for its own
+      // validation (registerSchema's website field) to mean anything — the
+      // client-side early-return above only stops a bot that runs this JS
+      // at all, not one that calls the API directly.
+      await register({ ...values, website });
       navigate("/dashboard", { replace: true });
     } catch (err) {
       if (isApiError(err) && err.issues) {

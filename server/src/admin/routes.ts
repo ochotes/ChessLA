@@ -47,7 +47,12 @@ const statusSchema = z.object({ status: z.enum(["ACTIVE", "SUSPENDED", "BANNED"]
 adminRouter.post("/users/:id/status", validateBody(statusSchema), async (req, res) => {
   const target = await prisma.user.findUnique({ where: { id: req.params.id } });
   if (!target) return res.status(404).json({ error: "User not found." });
-  // A moderator/admin's own account can't be neutralized through this endpoint by someone else's mistake.
+  // A moderator/admin's own account can't be neutralized through this endpoint
+  // by someone else's mistake: a moderator may act on ordinary players, but
+  // changing a fellow staff member's status requires an admin.
+  if ((target.role === "ADMIN" || target.role === "MODERATOR") && req.user!.role !== "ADMIN") {
+    return res.status(403).json({ error: "Only an admin can change another staff member's status." });
+  }
   const updated = await prisma.user.update({ where: { id: target.id }, data: { status: req.body.status } });
   await writeAuditLog(req.user!.sub, "user.status_change", "user", target.id, { status: target.status }, { status: updated.status, reason: req.body.reason });
   res.json({ ok: true, user: { id: updated.id, status: updated.status } });
